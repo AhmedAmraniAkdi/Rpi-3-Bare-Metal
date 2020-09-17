@@ -28,6 +28,3 @@ https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
 
 https://www.raspberrypi.org/forums/viewtopic.php?t=214367
 
-
-Plays with the stack while passing the function parameters to get32 and put32.
-memmap defines the entry point 0x80000 for 64bit mode
