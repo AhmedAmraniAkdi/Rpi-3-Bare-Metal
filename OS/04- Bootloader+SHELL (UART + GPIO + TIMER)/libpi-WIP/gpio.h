@@ -106,12 +106,19 @@ typedef enum {
 } gpio_set_clear;
 
 // read registers
-typedef enum{
+typedef enum {
     GPLEV0 = 0x3F200034,
     GPLEV1 = 0x3F200038,
 } gpio_level;
 
-// pull down, pull up, events...
+// pull up/down registers
+typedef enum {
+    GPPUD     = 0x3F200094,
+    GPPUDCLK0 = 0x3F200098,
+    GPPUDCLK1 = 0x3F20009C,
+} gpio_pullupdown;
+
+// events...
 /*
 *
 *
@@ -125,36 +132,39 @@ void gpio_init(void);
 
 // set GPIO function for <pin> (input, output, alt...).
 // settings for other pins should be unchanged.
-int gpio_set_function(const gpio_pin pin, const gpio_func_t function);
+int gpio_set_function(gpio_pin pin, gpio_func_t function);
 
 // set <pin> to input or output.
-int gpio_set_input(const gpio_pin pin);
-int gpio_set_output(const gpio_pin pin);
+int gpio_set_input(gpio_pin pin);
+int gpio_set_output(gpio_pin pin);
 
 // write <pin> = <val>.  1 = high, 0 = low.
 // <pin> must be in output mode, other pins will be unchanged.
-int gpio_write(const gpio_pin pin, const unsigned val);
+int gpio_write(gpio_pin pin, unsigned val);
 
 // read <pin>: 1 = high, 0 = low.
-int gpio_read(const gpio_pin pin);
+int gpio_read(gpio_pin pin);
 
 // turn <pin> on.
-int gpio_set_on(const gpio_pin pin);
+int gpio_set_on(gpio_pin pin);
 
 // turn <pin> off.
-int gpio_set_off(const gpio_pin pin);
+int gpio_set_off(gpio_pin pin);
 
-// broadcom doc claims we can get the current state of the device
-// but that seems incorrect.
+// the 3 below functions use this one internally
+int gpio_set_pullupdownoff(gpio_pin pin, unsigned resistor);
 
 // set <pin> as a pullup
-void gpio_set_pullup(unsigned pin);
-// set <pin> as a pulldown.
-void gpio_set_pulldown(unsigned pin);
-// set <pin> back to the default state: no pull up, no pulldown.
-void gpio_pud_off(unsigned pin);
+int gpio_set_pullup(gpio_pin pin);
 
-int gpio_get_pud(unsigned pin);
+// set <pin> as a pulldown.
+int gpio_set_pulldown(gpio_pin pin);
+
+// set <pin> back to the default state: no pull up, no pulldown.
+int gpio_pud_off(gpio_pin pin);
+
+
+//int gpio_get_pud(unsigned pin); we can't get pud status of gpio
 
 /*****************************************************************
  * use the following to configure interrupts on pins.

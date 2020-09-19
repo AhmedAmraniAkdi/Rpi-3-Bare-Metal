@@ -16,15 +16,4 @@ For blinking the led I used this folder:
 
 https://github.com/dwelch67/raspberrypi-three/tree/master/bplus/aarch64/blinker01
 
-https://www.raspberrypi.org/forums/viewtopic.php?t=214367
-
-Since following CS140e doesn't work for me, but this works.
-
-naming the kernel kernel8.img is enough to make it boot in 64bit mode, the entry point is at 0x80000 for the code.
-
-https://github.com/raspberrypi/firmware/issues/1193
-
-https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
-
-https://www.raspberrypi.org/forums/viewtopic.php?t=214367
 
