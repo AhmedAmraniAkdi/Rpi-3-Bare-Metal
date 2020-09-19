@@ -7,7 +7,13 @@
  */
 
 
-//symbolic names for the GPIO pins
+/* 
+*
+* Pins
+*
+*/
+
+
 typedef enum {
     GPIO_PIN0 = 0,
     GPIO_PIN1 = 1,
@@ -65,9 +71,13 @@ typedef enum {
     GPIO_PIN53 = 53,
 } gpio_pin;
 
-// GPIO pin mappings for UART
-#define GPIO_TX GPIO_PIN14
-#define GPIO_RX GPIO_PIN15
+
+/* 
+*
+* Pin Functions
+*
+*/
+
 
  //These enumerated values establish symbolic names for each of the
  //available GPIO pin functions.
@@ -85,7 +95,11 @@ typedef enum {
 #define GPIO_INVALID_REQUEST  -1  // return value for invalid request
 
 
-//Base adresses of registers
+/* 
+*
+* Registers
+*
+*/
 
 // Function select registers
 typedef enum {
@@ -118,14 +132,32 @@ typedef enum {
     GPPUDCLK1 = 0x3F20009C,
 } gpio_pullupdown;
 
-// events...
-/*
+// events
+// interrupts will be on interrupts.h
+typedef enum{
+    GPEDS0  = 0x3F200040,
+    GPEDS1  = 0x3F200044,
+    GPREN0  = 0x3F20004C,
+    GPREN1  = 0x3F200050,
+    GPFEN0  = 0x3F200058,
+    GPFEN1  = 0x3F20005C,
+    GPHEN0  = 0x3F200064,
+    GPHEN1  = 0x3F200068,
+    GPLEN0  = 0x3F200070, 
+    GPLEN1  = 0x3F200074,
+    GPAREN0 = 0x3F20007C,
+    GPAREN1 = 0x3F200080,
+    GPAFEN0 = 0x3F200088,
+    GPAFEN1 = 0x3F20008C,
+} gpio_events;
+
+
+/* 
 *
-*
-*
-*
+* Functions
 *
 */
+
 
 //Initialize the GPIO code module. Does nothing for now
 void gpio_init(void);
@@ -151,6 +183,14 @@ int gpio_set_on(gpio_pin pin);
 // turn <pin> off.
 int gpio_set_off(gpio_pin pin);
 
+
+/* 
+*
+* Pull up/down
+*
+*/
+
+
 // the 3 below functions use this one internally
 int gpio_set_pullupdownoff(gpio_pin pin, unsigned resistor);
 
@@ -163,45 +203,37 @@ int gpio_set_pulldown(gpio_pin pin);
 // set <pin> back to the default state: no pull up, no pulldown.
 int gpio_pud_off(gpio_pin pin);
 
+/* 
+*
+* Events
+*
+*/
 
-//int gpio_get_pud(unsigned pin); we can't get pud status of gpio
+// if val == 1, we set, if val == 0 we clear the event enable registers
+//set to detect rising edge (0->1) on <pin>. 011
+int gpio_event_rising_edge_sync(gpio_pin pin, unsigned val);
 
-/*****************************************************************
- * use the following to configure interrupts on pins.
- */
+// set or clear falling edge (1->0). 100
+int gpio_event_falling_edge_sync(gpio_pin pin, unsigned val);
 
+//set or clear rising edge (0->1) on <pin>. asynchronous!
+int gpio_event_rising_edge_async(gpio_pin pin, unsigned val);
 
-// gpio_int_rising_edge and gpio_int_falling_edge (and any other) should
-// call this routine (you must implement) to setup the right GPIO event.
-// as with setting up functions, you should bitwise-or in the value for the 
-// pin you are setting with the existing pin values.  (otherwise you will
-// lose their configuration).  you also need to enable the right IRQ.   make
-// sure to use device barriers!!
-enum { GPIO_INT0 = 49, GPIO_INT1, GPIO_INT2, GPIO_INT3 };
-int is_gpio_int(unsigned gpio_int);
+// set or clear falling edge (1->0). asynchronous
+int gpio_event_falling_edge_async(gpio_pin pin, unsigned val);
 
-// p97 set to detect rising edge (0->1) on <pin>.
-// as the broadcom doc states, it  detects by sampling based on the clock.
-// it looks for "011" (low, hi, hi) to suppress noise.  i.e., its triggered only
-// *after* a 1 reading has been sampled twice, so there will be delay.
-// if you want lower latency, you should us async rising edge (p99)
-void gpio_int_rising_edge(unsigned pin);
+// set or clear to detect high level
+int gpio_event_highlevel(gpio_pin pin, unsigned val);
 
-// p98: detect falling edge (1->0).  sampled using the system clock.  
-// similarly to rising edge detection, it suppresses noise by looking for
-// "100" --- i.e., is triggered after two readings of "0" and so the 
-// interrupt is delayed two clock cycles.   if you want  lower latency,
-// you should use async falling edge. (p99)
-void gpio_int_falling_edge(unsigned pin);
+// set to detect low level
+int gpio_event_lowlevel(gpio_pin pin, unsigned val);
 
-// p96: a 1<<pin is set in EVENT_DETECT if <pin> triggered an interrupt.
-// if you configure multiple events to lead to interrupts, you will have to 
-// read the pin to determine which caused it.
-int gpio_event_detected(unsigned pin);
+// p96: a 1<<pin is set in EVENT_DETECT if <pin> triggered an event.
+// 1 if sucess, 0 if no event, -1 if error
+int gpio_event_detected(gpio_pin pin);
 
-// p96: have to write a 1 to the pin to clear the event.
-void gpio_event_clear(unsigned pin);
-
+// have to write a 1 to the pin in register to clear the event.
+int gpio_event_clear(gpio_pin pin);
 
 
 #endif

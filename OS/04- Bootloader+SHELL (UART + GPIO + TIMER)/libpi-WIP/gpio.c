@@ -8,6 +8,30 @@ void gpio_init(void){} // nothing for now
 // to use the correct ones
 // return 1 if sucess, -1 if error
 
+/*
+*
+* helper function
+*
+*/
+
+// many times we need to set a bit in a register and that's it
+// works for the cases where: 53 pins, 2x32bit registers are needed for X thing
+// we just need the address of the first register and the value to put ( 1 or 0)
+
+void put_in_register(unsigned r, unsigned pin, unsigned val){
+    unsigned value;
+    unsigned r_ = r + 4 * pin/32;
+    value = GET32(r_);
+    PUT32(r_, value | (val << (pin%32)));  
+}
+
+/*
+*
+* Functions definitions
+*
+*/
+
+
 int gpio_set_function(gpio_pin pin, gpio_func_t function){
 
     if(pin < 0 || pin > 53){
@@ -18,12 +42,12 @@ int gpio_set_function(gpio_pin pin, gpio_func_t function){
         return GPIO_INVALID_REQUEST;
     }
 
-    unsigned int value;
+    unsigned value;
     gpio_func_select r = GPFSEL0 + 4 * pin/10;
-    value =GET32(r);            
-    value &=~(7<<((pin%10)*3));
-    value |=function<<((pin%10)*3);
-    PUT32(r,value);             
+    value = GET32(r);            
+    value &= ~(7<<((pin%10)*3));
+    value |= function<<((pin%10)*3);
+    PUT32(r, value);             
 
     return 1;
 }
@@ -54,10 +78,10 @@ int gpio_write(gpio_pin pin, unsigned val){
         return GPIO_INVALID_REQUEST;
     }
 
-    unsigned int value;
+    unsigned value;
     gpio_func_select r = GPFSEL0 + 4 * pin/10;
-    value =GET32(r);            
-    value =(value>>((pin%10)*3)) & 7; // 3 bits for each pin
+    value = GET32(r);            
+    value = (value>>((pin%10)*3)) & 7; // 3 bits for each pin
     if(value != GPIO_FUNC_OUTPUT){
         return GPIO_INVALID_REQUEST;
     }
@@ -70,28 +94,25 @@ int gpio_write(gpio_pin pin, unsigned val){
 }
 
 int gpio_set_on(gpio_pin pin){
-
-    unsigned int value;
-    gpio_set_clear r = GPSET0 + 4 * pin/32;
-    value =GET32(r);
-    value |=1<<(pin%32);
-    PUT32(r,value); 
-
+    put_in_register(GPSET0, pin, 1);
     return 1;
 }
 
 int gpio_set_off(gpio_pin pin){
-
-    unsigned int value;
-    gpio_set_clear r = GPCLEAR0 + 4 * pin/32;
-    value =GET32(r);
-    value |=1<<(pin%32);
-    PUT32(r,value); 
-
+    put_in_register(GPCLEAR0, pin, 1);
     return 1;
 }
 
+
+/* 
+*
+* Pull up/down
+*
+*/
+
+
 int gpio_set_pullupdownoff(gpio_pin pin, unsigned resistor){
+    
     if(pin < 0 || pin > 53){
         return GPIO_INVALID_REQUEST;
     }
@@ -118,4 +139,101 @@ int gpio_set_pulldown(gpio_pin pin){
 int gpio_pud_off(gpio_pin pin){
     return gpio_set_pullupdownoff(pin, 0);
 }
+
+/* 
+*
+* Events
+*
+*/
+
+int gpio_event_rising_edge_sync(gpio_pin pin, unsigned val){
+
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPREN0, pin, val);  
+
+    return 1;
+
+}
+
+int gpio_event_falling_edge_sync(gpio_pin pin, unsigned val){
+        
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPFEN0, pin, val);   
+
+    return 1;
+}
+
+int gpio_event_rising_edge_async(gpio_pin pin, unsigned val){
+        
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPAREN0, pin, val);  
+    return 1;
+}
+
+int gpio_event_falling_edge_async(gpio_pin pin, unsigned val){
+    
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPAFEN0, pin, val);    
+
+    return 1;
+}
+
+int gpio_event_highlevel(gpio_pin pin, unsigned val){
+    
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPHEN0, pin, val);   
+
+    return 1;
+}
+
+// set to detect low level
+int gpio_event_lowlevel(gpio_pin pin, unsigned val){
+    
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPREN0, pin, val);    
+
+    return 1;
+}
+
+
+int gpio_event_detected(gpio_pin pin){
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    gpio_events r = GPEDS0 + 4 * pin/32;
+    unsigned value = GET32(r);
+
+    return (value>>(pin%32)) & 1;   
+}
+
+
+int gpio_event_clear(gpio_pin pin){
+    if(pin < 0 || pin > 53){
+        return GPIO_INVALID_REQUEST;
+    }
+
+    put_in_register(GPEDS0, pin, 1);    
+
+    return 1;
+}
+
 
