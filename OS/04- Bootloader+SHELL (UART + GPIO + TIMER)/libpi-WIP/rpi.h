@@ -6,5 +6,8 @@ extern void PUT32(unsigned, unsigned);
 extern unsigned GET32(unsigned);
 extern void CYCLE_DELAY(unsigned);
 
+extern void DSB(void);
+extern void DMB(void);
+extern void ISB(void);
 
 #endif
