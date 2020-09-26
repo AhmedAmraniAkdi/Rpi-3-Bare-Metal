@@ -30,3 +30,8 @@ CYCLE_DELAY:
     subs x0, x0, #1
 	bne delay
 	ret
+
+.globl BRANCHTO
+BRANCHTO:
+    mov w30,w0
+    ret
