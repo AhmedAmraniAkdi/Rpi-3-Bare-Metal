@@ -1,7 +1,7 @@
 #include "gpio.h"
 #include "rpi.h"
 
-void gpio_init(void){} // nothing for now
+int gpio_init(void){} // nothing for now
 
 
 // each gpio has a distinct set of function, the user needs

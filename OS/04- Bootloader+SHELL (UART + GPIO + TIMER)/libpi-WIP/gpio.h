@@ -2,9 +2,11 @@
 #define GPIO_H
 
 /*
- * Functions for controlling Raspberry Pi GPIO.
- * Ahmed Amrani Akdi
- */
+*
+* Functions for controlling Raspberry Pi GPIO.
+* Ahmed Amrani Akdi
+*
+*/
 
 
 /* 
@@ -160,7 +162,7 @@ typedef enum{
 
 
 //Initialize the GPIO code module. Does nothing for now
-void gpio_init(void);
+int gpio_init(void);
 
 // set GPIO function for <pin> (input, output, alt...).
 // settings for other pins should be unchanged.
