@@ -5,13 +5,8 @@
 #include <string.h>
 
 #include "libunix.h"
-
 #include <dirent.h>
-static const char *ttyusb_prefixes[] = {
-	"ttyUSB",	// linux
-	"cu.SLAB_USB", // mac os
-	0
-};
+
 
 // find the TTY-usb device (if any) by using <scandir> to search for
 // a device with a prefix given by <ttyusb_prefixes> in /dev
@@ -36,7 +31,7 @@ char *find_ttyusb(void) {
     }
 
     for(int i = 0; i < noOfFiles; i++){
-        if(strstr(fileList[i]->d_name, ttyusb_prefixes[0]) != NULL){
+        if(strstr(fileList[i]->d_name, "ttyUSB") != NULL){
             ocurrences++;
             (*p) = fileList[i]->d_name;
         }

@@ -1,7 +1,8 @@
+// https://github.com/dddrrreee/cs140e-20win/blob/master/labs/2-bootloader/shared-code/simple-boot.h
 void simple_boot(int fd, const unsigned char * buf, unsigned n);
 
 enum {
-    ARMBASE=0x8000, // where program gets linked.  we could send this.
+    ARMBASE=0x8000, // where program gets linked.  we could send this.  // need to change this?
 
     // the weird numbers are to try to help with debugging
     // when you drop a byte, flip them, corrupt one, etc.

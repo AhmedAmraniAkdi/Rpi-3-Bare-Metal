@@ -28,8 +28,8 @@ dummy:
 .globl CYCLE_DELAY
 CYCLE_DELAY:
     subs x0, x0, #1
-	bne CYCLE_DELAY
-	ret
+    bne CYCLE_DELAY
+    ret
 
 .globl BRANCHTO
 BRANCHTO:
