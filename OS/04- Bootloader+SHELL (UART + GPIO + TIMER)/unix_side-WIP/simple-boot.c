@@ -3,9 +3,6 @@
  * see the lab for the protocol definition.
  */
 
-/*********************************************************************************
- * Do not modify the code below.
- */
 #include <assert.h>
 #include <fcntl.h>
 #include <math.h>
@@ -57,16 +54,7 @@ uint32_t get_op(int fd) {
     return get_op(fd);
 }
 
-/*********************************************************************************
- * Put your modifications below.
- */
 
-// Implement steps
-//    1,2,3,4.
-//
-//  0 and 5 are implemented for exaple.
-//
-// Note: if timeout is too small you can fail here.
 void simple_boot(int fd, const uint8_t *buf, unsigned n) { 
     uint32_t op;
 
