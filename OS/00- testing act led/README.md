@@ -2,13 +2,13 @@ Testing the board, the toolchain and that I can even start this.
 
 For the toolchain I use aarch64-none-elf, followed these steps:
 
-wget https://cs140e.sergio.bz/files/aarch64-none-elf-linux-x64.tar.gz
+    wget https://cs140e.sergio.bz/files/aarch64-none-elf-linux-x64.tar.gz
 
-tar -xzvf aarch64-none-elf-linux-x64.tar.gz
+    tar -xzvf aarch64-none-elf-linux-x64.tar.gz
 
-sudo mv aarch64-none-elf /usr/local/bin
+    sudo mv aarch64-none-elf /usr/local/bin
 
-Add PATH="/usr/local/bin/aarch64-none-elf/bin:$PATH" to ~/.profile
+    Add PATH="/usr/local/bin/aarch64-none-elf/bin:$PATH" to ~/.profile
 
 from https://cs140e.sergio.bz/assignments/0-blinky/
 

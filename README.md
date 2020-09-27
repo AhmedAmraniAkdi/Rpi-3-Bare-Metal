@@ -13,3 +13,5 @@ https://github.com/dddrrreee/cs140e-20win
 https://github.com/dwelch67/raspberrypi-three
 
 https://jsandler18.github.io/
+
+https://github.com/LdB-ECM/Raspberry-Pi/blob/master/10_virtualmemory/rpi-SmartStart.c  ( I like the programming style of this one)
