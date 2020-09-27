@@ -19,17 +19,16 @@ int uart_getc(void){
     return(GET32(AUX_MU_IO_REG) & 0xFF);
 }
 
-int uart_putc(unsigned c){
+void uart_putc(unsigned c){
     while(1){
         if(GET32(AUX_MU_LSR_REG) & 0x20){
             break;
         }
     }
     PUT32(AUX_MU_IO_REG, c);
-    return 1;
 }
 
-int uart_init(unsigned baudrate){
+void uart_init(unsigned baudrate){
 
     // enable mini uart
     PUT32(AUX_ENABLES, 1);
@@ -62,6 +61,4 @@ int uart_init(unsigned baudrate){
     // enable r/s
     PUT32(AUX_MU_CNTL_REG, 3);
     DSB();
-
-    return 1;
 }

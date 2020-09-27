@@ -45,7 +45,7 @@ typedef enum {
 // no interrupts still
 
 // initilize the mini uart
-int uart_init(unsigned baudrate);
+void uart_init(unsigned baudrate);
 
 // 1 = at least one byte on rx queue, 0 otherwise
 int uart_can_getc(void);
@@ -54,7 +54,7 @@ int uart_can_getc(void);
 int uart_getc(void);
 
 // 1 = space to put at least one byte, 0 otherwise.
-int uart_can_putc(void);
+void uart_can_putc(void);
 
 // put one byte on the tx qqueue
 void uart_putc(unsigned c);
