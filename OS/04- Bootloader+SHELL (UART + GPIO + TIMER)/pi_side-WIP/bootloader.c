@@ -79,29 +79,43 @@ void notmain(void) {
     // 1. keep sending GET_PROG_INFO until there is data.
     wait_for_data();
 
-    /****************************************************************
-     * Add your code below: 2,3,4,5,6
-     */
-
-
     // 2. expect: [PUT_PROG_INFO, addr, nbytes, cksum] 
     //    we echo cksum back in step 4 to help debugging.
+    if(get_uint() != PUT_PROG_INFO){
+        die(NOT_PUT_PROG_INFO);
+    }
 
+    unsigned addr = get_uint();
+    unsigned n = get_uint();
+    unsigned cksum = get_uint();
 
     // 3. If the binary will collide with us, abort. 
     //    you can assume that code must be below where the booloader code
     //    gap starts.
-
+    if(addr < SOME_VALUE){
+        die(BAD_CODE_ADDR);
+    }
 
     // 4. send [GET_CODE, cksum] back.
+    put_uint(GET_CODE);
+    put_uint(cksum);
 
 
     // 5. expect: [PUT_CODE, <code>]
     //  read each sent byte and write it starting at 
     //  ARMBASE using PUT8
+    if(get_uint() != PUT_CODE){
+        die(NOT_PUT_CODE);
+    }
+    char *buf = (char*)calloc(n, sizeof(char));
+    for(int i = 0; i < n; i++){
+        buf[i] = get_byte();
+    }
 
     // 6. verify the cksum of the copied code.
-
+    if(cksum != crc32(buf, n)){
+        die(BAD_CODE_CKSUM);
+    }
 
     /****************************************************************
      * add your code above: don't modify below unless you want to 

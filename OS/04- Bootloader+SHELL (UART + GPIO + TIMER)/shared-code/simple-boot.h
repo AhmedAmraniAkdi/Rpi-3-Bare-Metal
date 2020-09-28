@@ -21,8 +21,10 @@ enum {
 
 
     // error codes from the pi to unix
-    BAD_CODE_ADDR   = 0xdeadbeef,
-    BAD_CODE_CKSUM  = 0xfeedface,
+	NOT_PUT_PROG_INFO = 0xdeadface,
+	NOT_PUT_CODE      = 0xfeebdeed,
+    BAD_CODE_ADDR     = 0xdeadbeef,
+    BAD_CODE_CKSUM    = 0xfeedface,
 };
 
 #ifdef __SIMPLE_IMPL__

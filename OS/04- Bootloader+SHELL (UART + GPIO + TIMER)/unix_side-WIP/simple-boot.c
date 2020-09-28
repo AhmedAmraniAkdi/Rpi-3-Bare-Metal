@@ -67,20 +67,31 @@ void simple_boot(int fd, const uint8_t *buf, unsigned n) {
     // 0. we drain the initial pipe: can have garbage.   it's a little risky to
     // use <get_op> since if the garbage matches the opcode, we will print
     // nonsense.  could add a crc.
-    while((op = get_op(fd)) != GET_PROG_INFO)
+    while((op = get_op(fd)) != GET_PROG_INFO){
         output("expected initial GET_PROG_INFO, got <%x>: discarding.\n", op);
-
+    }
     // 1. reply to the GET_PROG_INFO
-    unimplemented();
+    put_uint32(fd, PUT_PROG_INFO);
+    put_uint32(fd, ARMBASE);
+    put_uint32(fd, n);
+    put_uint32(fd, crc32(buf, n));
 
     // 2. drain any extra GET_PROG_INFOS
-    unimplemented();
+    while((op = get_op(fd)) == GET_PROG_INFO){};
 
     // 3. check that we received a GET_CODE
-    unimplemented();
+    if(get_uint32(fd) != GET_CODE){
+        panic("GET_CODE not received");
+    }
+    if(get_uint32(fd) != crc32(buf, n)){
+        panic("bad check sum");
+    }
 
     // 4. handle it: send a PUT_CODE massage.
-    unimplemented();
+    put_uint32(fd, PUT_CODE);
+    for(int i = 0; i < n; i++){
+        put_byte(fd, buf[i]);
+    }
 
     // 5. Wait for success
     ck_eq32(fd, "BOOT_SUCCESS mismatch", BOOT_SUCCESS, get_op(fd));
