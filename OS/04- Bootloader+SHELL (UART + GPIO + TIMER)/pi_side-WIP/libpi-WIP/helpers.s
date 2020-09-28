@@ -3,8 +3,13 @@
 
 .globl PUT32
 PUT32:
-  str w1,[x0]
-  ret
+    str w1,[x0]
+    ret
+
+.globl PUT8
+PUT8:
+    strb w1,[x0]
+    ret
 
 .globl GET32
 GET32:

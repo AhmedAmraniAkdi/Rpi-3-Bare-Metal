@@ -72,6 +72,15 @@ void wait_for_data(void) {
     }
 }
 
+void wait(void){
+    unsigned s = timer_get_usec();
+    while((timer_get_usec() - s) < 300*1000) {
+            // the UART says there is data: start eating it!
+            if(uart_can_getc())
+                return;
+        }
+        die(BOOT_ERROR);
+}
 
 void notmain(void) {
     uart_init(115200);
@@ -92,7 +101,7 @@ void notmain(void) {
     // 3. If the binary will collide with us, abort. 
     //    you can assume that code must be below where the booloader code
     //    gap starts.
-    if(addr < SOME_VALUE){
+    if(addr < ARMBASE){
         die(BAD_CODE_ADDR);
     }
 
@@ -104,6 +113,8 @@ void notmain(void) {
     // 5. expect: [PUT_CODE, <code>]
     //  read each sent byte and write it starting at 
     //  ARMBASE using PUT8
+    wait();
+
     if(get_uint() != PUT_CODE){
         die(NOT_PUT_CODE);
     }
@@ -117,19 +128,13 @@ void notmain(void) {
         die(BAD_CODE_CKSUM);
     }
 
-    /****************************************************************
-     * add your code above: don't modify below unless you want to 
-     * experiment.
-     */
+    for(int i = 0; i < n; i++){
+        PUT8(ARMBASE + i, buf[i]);
+    }
 
     // 7. no previous failures: send back a BOOT_SUCCESS!
     put_uint(BOOT_SUCCESS);
 
-	// XXX: appears we need these delays or the unix side gets confused.
-	// I believe it's b/c the code we call re-initializes the uart; could
-	// disable that to make it a bit more clean.
-	//
-    // XXX: I think we can remove this now; should test.
     delay_ms(500);
 
     // run what we got.
