@@ -113,7 +113,6 @@ void notmain(void) {
     // 5. expect: [PUT_CODE, <code>]
     //  read each sent byte and write it starting at 
     //  ARMBASE using PUT8
-    wait();
 
     if(get_uint() != PUT_CODE){
         die(NOT_PUT_CODE);
@@ -136,6 +135,8 @@ void notmain(void) {
     put_uint(BOOT_SUCCESS);
 
     delay_ms(500);
+
+    putk(buf); // send the program?
 
     // run what we got.
     BRANCHTO(ARMBASE);

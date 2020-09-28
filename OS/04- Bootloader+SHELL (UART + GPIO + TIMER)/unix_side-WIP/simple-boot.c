@@ -96,4 +96,6 @@ void simple_boot(int fd, const uint8_t *buf, unsigned n) {
     // 5. Wait for success
     ck_eq32(fd, "BOOT_SUCCESS mismatch", BOOT_SUCCESS, get_op(fd));
     output("bootloader: Done.\n");
+
+    get_op(fd);
 }
