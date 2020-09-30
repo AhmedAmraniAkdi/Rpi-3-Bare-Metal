@@ -13,7 +13,7 @@ my-install:  $(OBJS)  libunix/libunix.a
 
 
 run:
-	./my-install ./hello.bin
+	./my-install ./testerino
 
 
 clean :

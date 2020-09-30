@@ -1,26 +1,4 @@
-// engler, cs140e.
-//
-// driver for bootloader for an r/pi connected via a tty-USB device.
-//
-// To make grading easier:
-//              DO NOT MODIFY THIS CODE!
-//              DO NOT MODIFY THIS CODE!
-//              DO NOT MODIFY THIS CODE!
-//              DO NOT MODIFY THIS CODE!
-//              DO NOT MODIFY THIS CODE!
-//
-// You shouldn't have to modify any code in this file.  Though, if you find
-// a bug or improve it, let me know!
-//
-// Sketch: 
-//  1. read in program to send.
-//	2. find the USB-tty serial device
-//	3. open the USB-tty serial device in 8n1 mode.
-//	4. send the program using a custom protocol.
-//	5. echo the output from the pi.
-//
-// For HW1, you will write implement steps (2), (3), (4).
-//
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdint.h>
@@ -110,14 +88,16 @@ int main(int argc, char *argv[]) {
 
     // open ttyUSB and set to 8n1
     char *dev_name;
-    if(argc == 2)
+    if(argc == 2)//{
         dev_name = find_ttyusb();
+        //printf("1\n");}
     else if(argc == 3)
         dev_name = argv[1];
     else
         die("%s: wrong number (n=%d) of arguments: expected 1 or 2\n", progname, argc-1);
+    //printf("2\n");
     int fd = set_tty_to_8n1(open_tty(dev_name), B115200, 1);
-
+    //printf("3\n");
     // get program to boot.
     char *pi_prog = argv[argc-1];
 	unsigned nbytes;
@@ -128,5 +108,6 @@ int main(int argc, char *argv[]) {
 
     // echo input / output to/from pi
 	echo(fd, dev_name);
+    free(dev_name);
 	return 0;
 }

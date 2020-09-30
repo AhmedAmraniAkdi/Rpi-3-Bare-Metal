@@ -46,6 +46,6 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET) *~ tags *.o
+	rm -f $(BUILD_DIR)/$(TARGET) $(BUILD_DIR)/*.o
 
 .PHONY: clean all
