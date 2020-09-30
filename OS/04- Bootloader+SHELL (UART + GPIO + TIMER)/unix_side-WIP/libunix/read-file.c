@@ -11,7 +11,7 @@
 // make sure to cleanup!
 uint8_t *read_file(unsigned *size, const char *name) {
 
-    struct stat* stats;
+    struct stat* stats = NULL;
     stat(name, stats);
 
     uint8_t *buf = (uint8_t*)calloc(roundup(stats->st_size, 4), sizeof(uint8_t));

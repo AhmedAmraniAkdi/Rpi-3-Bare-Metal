@@ -54,7 +54,7 @@ int uart_can_getc(void);
 int uart_getc(void);
 
 // 1 = space to put at least one byte, 0 otherwise.
-void uart_can_putc(void);
+int uart_can_putc(void);
 
 // put one byte on the tx qqueue
 void uart_putc(unsigned c);

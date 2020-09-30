@@ -62,9 +62,9 @@ void wait_for_data(void) {
     while(1) {
         put_uint(GET_PROG_INFO);
 
-        unsigned s = timer_get_usec();
+        unsigned s = timer_get_time();
         // the funny subtraction is to prevent wrapping.
-        while((timer_get_usec() - s) < 300*1000) {
+        while((timer_get_time() - s) < 300*1000) {
             // the UART says there is data: start eating it!
             if(uart_can_getc())
                 return;
@@ -73,8 +73,8 @@ void wait_for_data(void) {
 }
 
 void wait(void){
-    unsigned s = timer_get_usec();
-    while((timer_get_usec() - s) < 300*1000) {
+    unsigned s = timer_get_time();
+    while((timer_get_time() - s) < 300*1000) {
             // the UART says there is data: start eating it!
             if(uart_can_getc())
                 return;
@@ -117,26 +117,21 @@ void notmain(void) {
     if(get_uint() != PUT_CODE){
         die(NOT_PUT_CODE);
     }
-    char *buf = (char*)calloc(n, sizeof(char));
+
     for(int i = 0; i < n; i++){
-        buf[i] = get_byte();
+        PUT8(ARMBASE + i, get_byte());
     }
 
     // 6. verify the cksum of the copied code.
-    if(cksum != crc32(buf, n)){
+    if(cksum != crc32((void*)ARMBASE, n)){
         die(BAD_CODE_CKSUM);
     }
-
-    for(int i = 0; i < n; i++){
-        PUT8(ARMBASE + i, buf[i]);
-    }
-
     // 7. no previous failures: send back a BOOT_SUCCESS!
     put_uint(BOOT_SUCCESS);
 
     delay_ms(500);
 
-    putk(buf); // send the program?
+    putk((char*)ARMBASE); // send the program?
 
     // run what we got.
     BRANCHTO(ARMBASE);

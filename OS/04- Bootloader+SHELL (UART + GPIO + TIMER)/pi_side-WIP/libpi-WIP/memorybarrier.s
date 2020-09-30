@@ -21,7 +21,7 @@ DMB:
 
 // for when you need to synchronise the new configuration of system registers and context changing stuff
 // invalidates all fetched instructions after barrier and refeteches when the instructions before the barrier are done
-.glob ISB
+.globl ISB
 ISB:
     ISB SY
     ret

@@ -4,10 +4,10 @@
 # the other is the same as the one used on libunix
 # will use it when there is more stuff
 
-CC= aarch64-none-elf
+CC= aarch64-none-elf-gcc
 
-LIBPI = libpi.small
-CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -Og -nostdlib -nostartfiles -ffreestanding 
+LIBPI = libpi-WIP
+CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles -ffreestanding 
 
 SRC = bootloader.c 
 OBJS = $(SRC:.c=.o)
@@ -16,15 +16,15 @@ OBJS = $(SRC:.c=.o)
 all : libpi kernel.img # copy
 
 libpi:
-	make -C libpi.small
+	make -C $(LIBPI)
 
 start.o : start.s
-	arm-none-eabi-as start.s -o start.o
+	aarch64-none-elf-as start.s -o start.o
 
-kernel.img : memmap start.o $(OBJS)  libpi.small/libpi.a
-	arm-none-eabi-ld start.o $(OBJS) libpi.small/libpi.a -T memmap -o bootloader.elf
-	arm-none-eabi-objdump -D bootloader.elf > bootloader.list
-	arm-none-eabi-objcopy bootloader.elf -O binary kernel.img
+kernel.img : mmap start.o $(OBJS)  $(LIBPI)/libpi.a
+	aarch64-none-elf-ld start.o $(OBJS) $(LIBPI)/libpi.a -T mmap -o bootloader.elf
+	aarch64-none-elf-objdump -D bootloader.elf > bootloader.list
+	aarch64-none-elf-objcopy bootloader.elf -O binary kernel.img
 
 # change this to copy whereever your sd is mounted.
 copy:
@@ -41,4 +41,4 @@ depend:
 .PHONY: clean depend copy libpi
 
 
-bootloader.o: ../shared-code/simple-boot.h libpi.small/rpi.h
+bootloader.o: ../shared-code/simple-boot.h $(LIBPI)/rpi.h $(LIBPI)/mini_uart.h $(LIBPI)/timer.h

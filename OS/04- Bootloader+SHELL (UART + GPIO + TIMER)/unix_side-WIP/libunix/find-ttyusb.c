@@ -15,7 +15,7 @@
 // panic's if 0 or more than 1.
 //
 char *find_ttyusb(void) {
-    char *p;
+    char *p = NULL;
     int ocurrences = 0;
     // use <alphasort> in <scandir>
     // return a malloc'd name so doesn't corrupt.
@@ -33,7 +33,7 @@ char *find_ttyusb(void) {
     for(int i = 0; i < noOfFiles; i++){
         if(strstr(fileList[i]->d_name, "ttyUSB") != NULL){
             ocurrences++;
-            (*p) = fileList[i]->d_name;
+            strcpy(p, fileList[i] -> d_name);
         }
         free(fileList[i]);
     }
@@ -43,6 +43,6 @@ char *find_ttyusb(void) {
         panic("#TTY-USB != 1");
     }
 
-    printf("%s\n", (*p));
+    printf("%s\n", p);
     return p;
 }

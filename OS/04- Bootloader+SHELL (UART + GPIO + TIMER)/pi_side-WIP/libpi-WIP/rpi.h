@@ -13,4 +13,6 @@ extern void DSB(void);
 extern void DMB(void);
 extern void ISB(void);
 
+void reboot(void);
+
 #endif

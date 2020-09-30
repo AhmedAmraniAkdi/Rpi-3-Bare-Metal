@@ -26,8 +26,8 @@ BRANCHTO:
     mov w30,w0
     ret
 
-.globl dummy
-dummy:
+.globl DUMMY
+DUMMY:
     ret
 
 .globl CYCLE_DELAY
