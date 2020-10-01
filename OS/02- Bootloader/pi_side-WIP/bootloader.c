@@ -7,6 +7,7 @@
 #include "rpi.h"
 #include "mini_uart.h"
 #include "timer.h"
+#include "gpio.h"
 
 #define __SIMPLE_IMPL__
 #include "../shared-code/simple-boot.h"         // holds crc32
@@ -84,6 +85,8 @@ void wait(void){
 
 void notmain(void) {
     uart_init(115200);
+    gpio_set_function(GPIO_PIN16, GPIO_FUNC_OUTPUT);
+    gpio_write(GPIO_PIN16, 1);
 
     // 1. keep sending GET_PROG_INFO until there is data.
     wait_for_data();

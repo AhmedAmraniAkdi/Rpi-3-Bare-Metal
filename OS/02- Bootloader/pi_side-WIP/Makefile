@@ -17,6 +17,7 @@ all : libpi kernel.img # copy
 
 libpi:
 	make -C $(LIBPI)
+	make -C ./program
 
 start.o : start.s
 	aarch64-none-elf-as start.s -o start.o
@@ -33,7 +34,8 @@ copy:
 
 clean :
 	rm -f *.o *.bin *.elf *.list *.img *~ Makefile.bak
-	make -C libpi.small clean
+	make -C $(LIBPI) clean
+	make -C ./program clean
 
 depend:
 	makedepend -I$(LIBPI) *.[ch] 
@@ -41,4 +43,4 @@ depend:
 .PHONY: clean depend copy libpi
 
 
-bootloader.o: ../shared-code/simple-boot.h $(LIBPI)/rpi.h $(LIBPI)/mini_uart.h $(LIBPI)/timer.h
+bootloader.o: ../shared-code/simple-boot.h $(LIBPI)/rpi.h $(LIBPI)/mini_uart.h $(LIBPI)/timer.h $(LIBPI)/gpio.h

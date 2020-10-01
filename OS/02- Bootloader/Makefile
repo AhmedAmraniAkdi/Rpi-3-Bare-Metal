@@ -1,12 +1,10 @@
-all:
-
 build:
-	make -C pi-side
-	make -C unix-side
+	make -C pi_side-WIP
+	make -C unix_side-WIP
 
 clean:
 	rm -f *~ */*~ *.bak
-	make -C pi-side clean
-	make -C unix-side clean
+	make -C pi_side-WIP clean
+	make -C unix_side-WIP clean
 
 .PHONY: clean build
