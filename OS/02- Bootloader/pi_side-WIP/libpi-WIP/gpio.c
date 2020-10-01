@@ -22,7 +22,7 @@ int gpio_init(void){
 
 void put_in_register(unsigned r, unsigned pin, unsigned val){
     unsigned value;
-    unsigned r_ = r + 4 * pin/32;
+    unsigned r_ = r + 4 * (pin/32);
     value = GET32(r_);
     PUT32(r_, value | (val << (pin%32)));  
 }
@@ -45,7 +45,7 @@ int gpio_set_function(gpio_pin pin, gpio_func_t function){
     }
 
     unsigned value;
-    gpio_func_select r = GPFSEL0 + 4 * pin/10;
+    gpio_func_select r = GPFSEL0 + 4 * (pin/10);
     value = GET32(r);            
     value &= ~(7<<((pin%10)*3));
     value |= function<<((pin%10)*3);
@@ -68,7 +68,7 @@ int gpio_read(gpio_pin pin){
         return GPIO_INVALID_REQUEST;
     }
 
-    gpio_level r = GPLEV0 + 4 * pin/32;
+    gpio_level r = GPLEV0 + 4 * (pin/32);
     unsigned int value = GET32(r);
 
     return (value>>(pin%32)) & 1;
@@ -81,7 +81,7 @@ int gpio_write(gpio_pin pin, unsigned val){
     }
 
     unsigned value;
-    gpio_func_select r = GPFSEL0 + 4 * pin/10;
+    gpio_func_select r = GPFSEL0 + 4 * (pin/10);
     value = GET32(r);            
     value = (value>>((pin%10)*3)) & 7; // 3 bits for each pin
     if(value != GPIO_FUNC_OUTPUT){
@@ -121,7 +121,7 @@ int gpio_set_pullupdownoff(gpio_pin pin, unsigned resistor){
 
     PUT32(GPPUD, resistor);
     CYCLE_DELAY(175); // it asks for 150, 175 to be sure
-    gpio_pullupdown r = GPPUDCLK0 + 4 * pin/32;
+    gpio_pullupdown r = GPPUDCLK0 + 4 * (pin/32);
     PUT32(r, 1<<(pin%32));
     CYCLE_DELAY(175);
     PUT32(GPPUD, 0);
@@ -221,7 +221,7 @@ int gpio_event_detected(gpio_pin pin){
         return GPIO_INVALID_REQUEST;
     }
 
-    gpio_events r = GPEDS0 + 4 * pin/32;
+    gpio_events r = GPEDS0 + 4 * (pin/32);
     unsigned value = GET32(r);
 
     return (value>>(pin%32)) & 1;   

@@ -14,7 +14,8 @@ _start.o : _start.s
 kernel8.img : mmap_blinker _start.o $(OBJS) $(LIBPI)/libpi.a
 	aarch64-none-elf-ld _start.o $(OBJS) $(LIBPI)/libpi.a -T mmap_blinker -o blinker.elf
 	aarch64-none-elf-objdump -D blinker.elf > blinker.list
-	aarch64-none-elf-objcopy blinker.elf -O binary kernel8.img
+	aarch64-none-elf-objcopy blinker.elf -O binary blinker.bin
+	cp blinker.bin ../../unix_side-WIP/
 
 clean :
 	rm -f *.o *.bin *.elf *.list *.img *~ Makefile.bak
