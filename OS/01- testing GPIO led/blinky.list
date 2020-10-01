@@ -1,0 +1,154 @@
+
+blinky.elf:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000000000 <__start>:
+       0:	14002000 	b	8000 <__start_ram>
+	...
+
+0000000000008000 <__start_ram>:
+    8000:	d53800a7 	mrs	x7, mpidr_el1
+    8004:	924004e7 	and	x7, x7, #0x3
+    8008:	b4000047 	cbz	x7, 8010 <__start_master>
+    800c:	1400000b 	b	8038 <__hang>
+
+0000000000008010 <__start_master>:
+    8010:	b0000002 	adrp	x2, 9000 <__bss_end+0xe80>
+    8014:	91060042 	add	x2, x2, #0x180
+    8018:	9100005f 	mov	sp, x2
+
+000000000000801c <__clear_bss>:
+    801c:	18000120 	ldr	w0, 8040 <_bss_segment>
+    8020:	18000121 	ldr	w1, 8044 <_bss_segment+0x4>
+
+0000000000008024 <__clear>:
+    8024:	b4000081 	cbz	x1, 8034 <__go_main>
+    8028:	f800841f 	str	xzr, [x0], #8
+    802c:	d1000421 	sub	x1, x1, #0x1
+    8030:	b5ffffa1 	cbnz	x1, 8024 <__clear>
+
+0000000000008034 <__go_main>:
+    8034:	94000023 	bl	80c0 <main>
+
+0000000000008038 <__hang>:
+    8038:	d503205f 	wfe
+    803c:	17ffffff 	b	8038 <__hang>
+
+0000000000008040 <_bss_segment>:
+    8040:	00008180 	.word	0x00008180
+    8044:	00000000 	.word	0x00000000
+
+0000000000008048 <spin_sleep_us>:
+    8048:	d10083ff 	sub	sp, sp, #0x20
+    804c:	b9000fe0 	str	w0, [sp, #12]
+    8050:	b9001fff 	str	wzr, [sp, #28]
+    8054:	14000005 	b	8068 <spin_sleep_us+0x20>
+    8058:	d503201f 	nop
+    805c:	b9401fe0 	ldr	w0, [sp, #28]
+    8060:	11000400 	add	w0, w0, #0x1
+    8064:	b9001fe0 	str	w0, [sp, #28]
+    8068:	b9400fe1 	ldr	w1, [sp, #12]
+    806c:	2a0103e0 	mov	w0, w1
+    8070:	531f7800 	lsl	w0, w0, #1
+    8074:	0b010000 	add	w0, w0, w1
+    8078:	531f7800 	lsl	w0, w0, #1
+    807c:	2a0003e1 	mov	w1, w0
+    8080:	b9401fe0 	ldr	w0, [sp, #28]
+    8084:	6b01001f 	cmp	w0, w1
+    8088:	54fffe83 	b.cc	8058 <spin_sleep_us+0x10>  // b.lo, b.ul, b.last
+    808c:	d503201f 	nop
+    8090:	910083ff 	add	sp, sp, #0x20
+    8094:	d65f03c0 	ret
+
+0000000000008098 <spin_sleep_ms>:
+    8098:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+    809c:	910003fd 	mov	x29, sp
+    80a0:	b9001fa0 	str	w0, [x29, #28]
+    80a4:	b9401fa1 	ldr	w1, [x29, #28]
+    80a8:	52807d00 	mov	w0, #0x3e8                 	// #1000
+    80ac:	1b007c20 	mul	w0, w1, w0
+    80b0:	97ffffe6 	bl	8048 <spin_sleep_us>
+    80b4:	d503201f 	nop
+    80b8:	a8c27bfd 	ldp	x29, x30, [sp], #32
+    80bc:	d65f03c0 	ret
+
+00000000000080c0 <main>:
+    80c0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+    80c4:	910003fd 	mov	x29, sp
+    80c8:	90000000 	adrp	x0, 8000 <__start_ram>
+    80cc:	91058000 	add	x0, x0, #0x160
+    80d0:	f9400000 	ldr	x0, [x0]
+    80d4:	b9400001 	ldr	w1, [x0]
+    80d8:	90000000 	adrp	x0, 8000 <__start_ram>
+    80dc:	91058000 	add	x0, x0, #0x160
+    80e0:	f9400000 	ldr	x0, [x0]
+    80e4:	120b7021 	and	w1, w1, #0xffe3ffff
+    80e8:	b9000001 	str	w1, [x0]
+    80ec:	90000000 	adrp	x0, 8000 <__start_ram>
+    80f0:	91058000 	add	x0, x0, #0x160
+    80f4:	f9400000 	ldr	x0, [x0]
+    80f8:	b9400001 	ldr	w1, [x0]
+    80fc:	90000000 	adrp	x0, 8000 <__start_ram>
+    8100:	91058000 	add	x0, x0, #0x160
+    8104:	f9400000 	ldr	x0, [x0]
+    8108:	320e0021 	orr	w1, w1, #0x40000
+    810c:	b9000001 	str	w1, [x0]
+    8110:	90000000 	adrp	x0, 8000 <__start_ram>
+    8114:	9105a000 	add	x0, x0, #0x168
+    8118:	f9400000 	ldr	x0, [x0]
+    811c:	52a00021 	mov	w1, #0x10000               	// #65536
+    8120:	b9000001 	str	w1, [x0]
+    8124:	52807d00 	mov	w0, #0x3e8                 	// #1000
+    8128:	97ffffdc 	bl	8098 <spin_sleep_ms>
+    812c:	90000000 	adrp	x0, 8000 <__start_ram>
+    8130:	9105c000 	add	x0, x0, #0x170
+    8134:	f9400000 	ldr	x0, [x0]
+    8138:	b9400001 	ldr	w1, [x0]
+    813c:	90000000 	adrp	x0, 8000 <__start_ram>
+    8140:	9105c000 	add	x0, x0, #0x170
+    8144:	f9400000 	ldr	x0, [x0]
+    8148:	32100021 	orr	w1, w1, #0x10000
+    814c:	b9000001 	str	w1, [x0]
+    8150:	52807d00 	mov	w0, #0x3e8                 	// #1000
+    8154:	97ffffd1 	bl	8098 <spin_sleep_ms>
+    8158:	17ffffee 	b	8110 <main+0x50>
+
+Disassembly of section .data:
+
+0000000000008160 <GPIO_FSEL1>:
+    8160:	3f200004 	.word	0x3f200004
+    8164:	00000000 	.word	0x00000000
+
+0000000000008168 <GPIO_SET0>:
+    8168:	3f20001c 	.word	0x3f20001c
+    816c:	00000000 	.word	0x00000000
+
+0000000000008170 <GPIO_CLR0>:
+    8170:	3f200028 	.word	0x3f200028
+    8174:	00000000 	.word	0x00000000
+
+Disassembly of section .bss:
+
+0000000000008178 <__bss_end-0x8>:
+	...
+
+0000000000008180 <__bss_end>:
+	...
+
+Disassembly of section .comment:
+
+0000000000000000 <.comment>:
+   0:	3a434347 	ccmn	w26, w3, #0x7, mi  // mi = first
+   4:	694c2820 	ldpsw	x0, x10, [x1, #96]
+   8:	6f72616e 	umlsl2	v14.4s, v11.8h, v2.h[3]
+   c:	43434720 	.inst	0x43434720 ; undefined
+  10:	322e3720 	orr	w0, w25, #0xfffc0000
+  14:	3130322d 	adds	w13, w17, #0xc0c
+  18:	31312e37 	adds	w23, w17, #0xc4b
+  1c:	2e372029 	usubl	v9.8h, v1.8b, v23.8b
+  20:	20312e32 	.inst	0x20312e32 ; undefined
+  24:	37313032 	tbnz	w18, #6, 2628 <__bss_dwords+0x2628>
+  28:	31313031 	adds	w17, w1, #0xc4c
+	...

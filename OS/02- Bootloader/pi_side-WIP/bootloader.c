@@ -62,7 +62,7 @@ void putk(const char *msg) {
 void wait_for_data(void) {
     while(1) {
         put_uint(GET_PROG_INFO);
-
+        gpio_write(GPIO_PIN16, 0);
         unsigned s = timer_get_time();
         // the funny subtraction is to prevent wrapping.
         while((timer_get_time() - s) < 300*1000) {
@@ -70,6 +70,7 @@ void wait_for_data(void) {
             if(uart_can_getc())
                 return;
         }
+        gpio_write(GPIO_PIN16, 1);
     }
 }
 
@@ -84,13 +85,14 @@ void wait(void){
 }
 
 void notmain(void) {
-    uart_init(115200);
     gpio_set_function(GPIO_PIN16, GPIO_FUNC_OUTPUT);
     gpio_write(GPIO_PIN16, 1);
 
+    uart_init(115200);
+
     // 1. keep sending GET_PROG_INFO until there is data.
     wait_for_data();
-
+    gpio_write(GPIO_PIN16, 1);
     // 2. expect: [PUT_PROG_INFO, addr, nbytes, cksum] 
     //    we echo cksum back in step 4 to help debugging.
     if(get_uint() != PUT_PROG_INFO){

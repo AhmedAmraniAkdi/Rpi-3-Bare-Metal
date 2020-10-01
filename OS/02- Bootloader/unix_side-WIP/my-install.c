@@ -108,6 +108,5 @@ int main(int argc, char *argv[]) {
 
     // echo input / output to/from pi
 	echo(fd, dev_name);
-    free(dev_name);
 	return 0;
 }

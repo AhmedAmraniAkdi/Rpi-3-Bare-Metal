@@ -83,11 +83,13 @@ void simple_boot(int fd, const uint8_t *buf, unsigned n) {
     if(get_uint32(fd) != GET_CODE){
         panic("GET_CODE not received");
     }
+    printf("got GET_CODE\n");
     if(get_uint32(fd) != crc32(buf, n)){
         panic("bad check sum");
     }
-
+    printf("good checksum\n");
     // 4. handle it: send a PUT_CODE massage.
+    printf("sending code\n");
     put_uint32(fd, PUT_CODE);
     for(int i = 0; i < n; i++){
         put_byte(fd, buf[i]);

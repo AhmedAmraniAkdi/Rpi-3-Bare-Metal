@@ -13,7 +13,7 @@ SRC = bootloader.c
 OBJS = $(SRC:.c=.o)
 
 # Uncomment copy and fix up where your SD card is.
-all : libpi kernel.img # copy
+all : libpi kernel8.img # copy
 
 libpi:
 	make -C $(LIBPI)
@@ -22,10 +22,10 @@ libpi:
 start.o : start.s
 	aarch64-none-elf-as start.s -o start.o
 
-kernel.img : mmap start.o $(OBJS)  $(LIBPI)/libpi.a
+kernel8.img : mmap start.o $(OBJS)  $(LIBPI)/libpi.a
 	aarch64-none-elf-ld start.o $(OBJS) $(LIBPI)/libpi.a -T mmap -o bootloader.elf
 	aarch64-none-elf-objdump -D bootloader.elf > bootloader.list
-	aarch64-none-elf-objcopy bootloader.elf -O binary kernel.img
+	aarch64-none-elf-objcopy bootloader.elf -O binary kernel8.img
 
 # change this to copy whereever your sd is mounted.
 copy:
