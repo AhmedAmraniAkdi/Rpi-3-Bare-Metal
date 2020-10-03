@@ -74,22 +74,24 @@ void wait_for_data(void) {
     }
 }
 
-void wait(void){
-    unsigned s = timer_get_time();
-    while((timer_get_time() - s) < 300*1000) {
-            // the UART says there is data: start eating it!
-            if(uart_can_getc())
-                return;
-        }
-        die(BOOT_ERROR);
-}
-
 void notmain(void) {
     gpio_set_function(GPIO_PIN16, GPIO_FUNC_OUTPUT);
     gpio_write(GPIO_PIN16, 1);
 
     uart_init(115200);
 
+    //unsigned ra=0;
+    while(1)
+    {   
+        while(1)
+        {
+            if(GET32(AUX_MU_LSR_REG)&0x20) break;
+        }
+        PUT32(AUX_MU_IO_REG,255);
+    }
+
+
+/*
     // 1. keep sending GET_PROG_INFO until there is data.
     wait_for_data();
     gpio_write(GPIO_PIN16, 1);
@@ -142,5 +144,5 @@ void notmain(void) {
     BRANCHTO(ARMBASE);
 
     // should not get back here, but just in case.
-    reboot();
+    reboot();*/
 }

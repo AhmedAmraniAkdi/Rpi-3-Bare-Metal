@@ -56,7 +56,7 @@ uint32_t get_op(int fd) {
 
 
 void simple_boot(int fd, const uint8_t *buf, unsigned n) { 
-    uint32_t op;
+    //uint32_t op;
 
     // if n is not a multiple of 4, use roundup() in libunix.h
     n = roundup(n,4);
@@ -67,11 +67,13 @@ void simple_boot(int fd, const uint8_t *buf, unsigned n) {
     // 0. we drain the initial pipe: can have garbage.   it's a little risky to
     // use <get_op> since if the garbage matches the opcode, we will print
     // nonsense.  could add a crc.
-    while((op = get_op(fd)) != GET_PROG_INFO){
-        output("expected initial GET_PROG_INFO, got <%x>: discarding.\n", op);
-    }
+    //while((op = get_op(fd)) != GET_PROG_INFO){
+    //    output("expected initial GET_PROG_INFO, got <%x>: discarding.\n", op);
+    //}
+    while(get_byte(fd) != 255){};
+    printf("\nsucess\n");
     // 1. reply to the GET_PROG_INFO
-    put_uint32(fd, PUT_PROG_INFO);
+    /*put_uint32(fd, PUT_PROG_INFO);
     put_uint32(fd, ARMBASE);
     put_uint32(fd, n);
     put_uint32(fd, crc32(buf, n));
@@ -99,5 +101,5 @@ void simple_boot(int fd, const uint8_t *buf, unsigned n) {
     ck_eq32(fd, "BOOT_SUCCESS mismatch", BOOT_SUCCESS, get_op(fd));
     output("bootloader: Done.\n");
 
-    get_op(fd);
+    get_op(fd);*/
 }

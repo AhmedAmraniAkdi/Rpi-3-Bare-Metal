@@ -11,13 +11,8 @@ libunix:
 my-install:  $(OBJS)  libunix/libunix.a
 	$(CC) $(CFLAGS) $(OBJS) -o my-install -lm libunix/libunix.a
 
-
-run:
-	./my-install ./testerino
-
-
 clean :
-	rm -f *.o *~ Makefile.bak my-install  tags
+	rm -f *.o *~ Makefile.bak my-install blinker.bin tags
 	make -C libunix clean
 
 .PHONY: run clean libunix
