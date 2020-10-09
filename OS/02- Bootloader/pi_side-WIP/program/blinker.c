@@ -7,7 +7,7 @@
 int notmain(){
     gpio_set_output(GPIO_PIN16);
     int i = 0;
-    while(i < 20){
+    while(i < 10){
         gpio_write(GPIO_PIN16, 1);
         delay_ms(500);
         gpio_write(GPIO_PIN16, 0);

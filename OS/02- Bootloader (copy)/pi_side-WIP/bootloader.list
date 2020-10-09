@@ -1,0 +1,275 @@
+
+bootloader.elf:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000080000 <_start>:
+   80000:	14060000 	b	200000 <skip>
+	...
+
+0000000000200000 <skip>:
+  200000:	b26403ff 	mov	sp, #0x10000000            	// #268435456
+  200004:	9400002d 	bl	2000b8 <notmain>
+
+0000000000200008 <hang>:
+  200008:	14000000 	b	200008 <hang>
+  20000c:	00000000 	.inst	0x00000000 ; undefined
+
+0000000000200010 <put_uint>:
+  200010:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+  200014:	910003fd 	mov	x29, sp
+  200018:	f9000bf3 	str	x19, [sp, #16]
+  20001c:	2a0003f3 	mov	w19, w0
+  200020:	12001c00 	and	w0, w0, #0xff
+  200024:	94000069 	bl	2001c8 <uart_putc>
+  200028:	d3483e60 	ubfx	x0, x19, #8, #8
+  20002c:	94000067 	bl	2001c8 <uart_putc>
+  200030:	d3505e60 	ubfx	x0, x19, #16, #8
+  200034:	94000065 	bl	2001c8 <uart_putc>
+  200038:	53187e60 	lsr	w0, w19, #24
+  20003c:	f9400bf3 	ldr	x19, [sp, #16]
+  200040:	a8c27bfd 	ldp	x29, x30, [sp], #32
+  200044:	14000061 	b	2001c8 <uart_putc>
+
+0000000000200048 <putk>:
+  200048:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+  20004c:	910003fd 	mov	x29, sp
+  200050:	f9000bf3 	str	x19, [sp, #16]
+  200054:	aa0003f3 	mov	x19, x0
+  200058:	529dddc0 	mov	w0, #0xeeee                	// #61166
+  20005c:	72bbbba0 	movk	w0, #0xdddd, lsl #16
+  200060:	97ffffec 	bl	200010 <put_uint>
+  200064:	39400260 	ldrb	w0, [x19]
+  200068:	34000240 	cbz	w0, 2000b0 <putk+0x68>
+  20006c:	d2800020 	mov	x0, #0x1                   	// #1
+  200070:	14000002 	b	200078 <putk+0x30>
+  200074:	aa0203e0 	mov	x0, x2
+  200078:	38606a61 	ldrb	w1, [x19, x0]
+  20007c:	91000402 	add	x2, x0, #0x1
+  200080:	35ffffa1 	cbnz	w1, 200074 <putk+0x2c>
+  200084:	97ffffe3 	bl	200010 <put_uint>
+  200088:	39400260 	ldrb	w0, [x19]
+  20008c:	340000c0 	cbz	w0, 2000a4 <putk+0x5c>
+  200090:	91000673 	add	x19, x19, #0x1
+  200094:	d503201f 	nop
+  200098:	9400004c 	bl	2001c8 <uart_putc>
+  20009c:	38401660 	ldrb	w0, [x19], #1
+  2000a0:	35ffffc0 	cbnz	w0, 200098 <putk+0x50>
+  2000a4:	f9400bf3 	ldr	x19, [sp, #16]
+  2000a8:	a8c27bfd 	ldp	x29, x30, [sp], #32
+  2000ac:	d65f03c0 	ret
+  2000b0:	52800000 	mov	w0, #0x0                   	// #0
+  2000b4:	17fffff4 	b	200084 <putk+0x3c>
+
+00000000002000b8 <notmain>:
+  2000b8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+  2000bc:	52984000 	mov	w0, #0xc200                	// #49664
+  2000c0:	72a00020 	movk	w0, #0x1, lsl #16
+  2000c4:	910003fd 	mov	x29, sp
+  2000c8:	a90153f3 	stp	x19, x20, [sp, #16]
+  2000cc:	528a0a93 	mov	w19, #0x5054                	// #20564
+  2000d0:	528a0814 	mov	w20, #0x5040                	// #20544
+  2000d4:	72a7e433 	movk	w19, #0x3f21, lsl #16
+  2000d8:	72a7e434 	movk	w20, #0x3f21, lsl #16
+  2000dc:	9400004b 	bl	200208 <uart_init>
+  2000e0:	2a1303e0 	mov	w0, w19
+  2000e4:	9400000b 	bl	200110 <GET32>
+  2000e8:	721b001f 	tst	w0, #0x20
+  2000ec:	54ffffa0 	b.eq	2000e0 <notmain+0x28>  // b.none
+  2000f0:	52800621 	mov	w1, #0x31                  	// #49
+  2000f4:	2a1403e0 	mov	w0, w20
+  2000f8:	94000002 	bl	200100 <PUT32>
+  2000fc:	17fffff9 	b	2000e0 <notmain+0x28>
+
+0000000000200100 <PUT32>:
+  200100:	b9000001 	str	w1, [x0]
+  200104:	d65f03c0 	ret
+
+0000000000200108 <PUT8>:
+  200108:	39000001 	strb	w1, [x0]
+  20010c:	d65f03c0 	ret
+
+0000000000200110 <GET32>:
+  200110:	b9400000 	ldr	w0, [x0]
+  200114:	d65f03c0 	ret
+
+0000000000200118 <GET8>:
+  200118:	39400000 	ldrb	w0, [x0]
+  20011c:	d65f03c0 	ret
+
+0000000000200120 <GETPC>:
+  200120:	aa1e03e0 	mov	x0, x30
+  200124:	d65f03c0 	ret
+
+0000000000200128 <BRANCHTO>:
+  200128:	2a0003fe 	mov	w30, w0
+  20012c:	d65f03c0 	ret
+
+0000000000200130 <DUMMY>:
+  200130:	d65f03c0 	ret
+
+0000000000200134 <CYCLE_DELAY>:
+  200134:	f1000400 	subs	x0, x0, #0x1
+  200138:	54ffffe1 	b.ne	200134 <CYCLE_DELAY>  // b.any
+  20013c:	d65f03c0 	ret
+
+0000000000200140 <uart_can_getc>:
+  200140:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  200144:	528a0a80 	mov	w0, #0x5054                	// #20564
+  200148:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  20014c:	910003fd 	mov	x29, sp
+  200150:	97fffff0 	bl	200110 <GET32>
+  200154:	12000000 	and	w0, w0, #0x1
+  200158:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  20015c:	d65f03c0 	ret
+
+0000000000200160 <uart_can_putc>:
+  200160:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+  200164:	528a0a80 	mov	w0, #0x5054                	// #20564
+  200168:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  20016c:	910003fd 	mov	x29, sp
+  200170:	97ffffe8 	bl	200110 <GET32>
+  200174:	121b0000 	and	w0, w0, #0x20
+  200178:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  20017c:	d65f03c0 	ret
+
+0000000000200180 <uart_getc>:
+  200180:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+  200184:	910003fd 	mov	x29, sp
+  200188:	f9000bf3 	str	x19, [sp, #16]
+  20018c:	528a0a93 	mov	w19, #0x5054                	// #20564
+  200190:	72a7e433 	movk	w19, #0x3f21, lsl #16
+  200194:	d503201f 	nop
+  200198:	2a1303e0 	mov	w0, w19
+  20019c:	97ffffdd 	bl	200110 <GET32>
+  2001a0:	7200001f 	tst	w0, #0x1
+  2001a4:	54ffffa0 	b.eq	200198 <uart_getc+0x18>  // b.none
+  2001a8:	528a0800 	mov	w0, #0x5040                	// #20544
+  2001ac:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  2001b0:	97ffffd8 	bl	200110 <GET32>
+  2001b4:	f9400bf3 	ldr	x19, [sp, #16]
+  2001b8:	12001c00 	and	w0, w0, #0xff
+  2001bc:	a8c27bfd 	ldp	x29, x30, [sp], #32
+  2001c0:	d65f03c0 	ret
+  2001c4:	d503201f 	nop
+
+00000000002001c8 <uart_putc>:
+  2001c8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+  2001cc:	910003fd 	mov	x29, sp
+  2001d0:	a90153f3 	stp	x19, x20, [sp, #16]
+  2001d4:	528a0a93 	mov	w19, #0x5054                	// #20564
+  2001d8:	2a0003f4 	mov	w20, w0
+  2001dc:	72a7e433 	movk	w19, #0x3f21, lsl #16
+  2001e0:	2a1303e0 	mov	w0, w19
+  2001e4:	97ffffcb 	bl	200110 <GET32>
+  2001e8:	721b001f 	tst	w0, #0x20
+  2001ec:	54ffffa0 	b.eq	2001e0 <uart_putc+0x18>  // b.none
+  2001f0:	2a1403e1 	mov	w1, w20
+  2001f4:	528a0800 	mov	w0, #0x5040                	// #20544
+  2001f8:	a94153f3 	ldp	x19, x20, [sp, #16]
+  2001fc:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200200:	a8c27bfd 	ldp	x29, x30, [sp], #32
+  200204:	17ffffbf 	b	200100 <PUT32>
+
+0000000000200208 <uart_init>:
+  200208:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+  20020c:	528a0080 	mov	w0, #0x5004                	// #20484
+  200210:	52800021 	mov	w1, #0x1                   	// #1
+  200214:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200218:	910003fd 	mov	x29, sp
+  20021c:	f9000bf3 	str	x19, [sp, #16]
+  200220:	97ffffb8 	bl	200100 <PUT32>
+  200224:	94000041 	bl	200328 <DSB>
+  200228:	528012d3 	mov	w19, #0x96                  	// #150
+  20022c:	528a0880 	mov	w0, #0x5044                	// #20548
+  200230:	52800001 	mov	w1, #0x0                   	// #0
+  200234:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200238:	97ffffb2 	bl	200100 <PUT32>
+  20023c:	528a0c00 	mov	w0, #0x5060                	// #20576
+  200240:	52800001 	mov	w1, #0x0                   	// #0
+  200244:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200248:	97ffffae 	bl	200100 <PUT32>
+  20024c:	528a0980 	mov	w0, #0x504c                	// #20556
+  200250:	52800061 	mov	w1, #0x3                   	// #3
+  200254:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200258:	97ffffaa 	bl	200100 <PUT32>
+  20025c:	528a0a00 	mov	w0, #0x5050                	// #20560
+  200260:	52800001 	mov	w1, #0x0                   	// #0
+  200264:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200268:	97ffffa6 	bl	200100 <PUT32>
+  20026c:	528a0880 	mov	w0, #0x5044                	// #20548
+  200270:	52800001 	mov	w1, #0x0                   	// #0
+  200274:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200278:	97ffffa2 	bl	200100 <PUT32>
+  20027c:	528a0900 	mov	w0, #0x5048                	// #20552
+  200280:	528000c1 	mov	w1, #0x6                   	// #6
+  200284:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200288:	97ffff9e 	bl	200100 <PUT32>
+  20028c:	528a0d00 	mov	w0, #0x5068                	// #20584
+  200290:	528021c1 	mov	w1, #0x10e                 	// #270
+  200294:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200298:	97ffff9a 	bl	200100 <PUT32>
+  20029c:	52800080 	mov	w0, #0x4                   	// #4
+  2002a0:	72a7e400 	movk	w0, #0x3f20, lsl #16
+  2002a4:	97ffff9b 	bl	200110 <GET32>
+  2002a8:	12117001 	and	w1, w0, #0xffff8fff
+  2002ac:	52800080 	mov	w0, #0x4                   	// #4
+  2002b0:	32130021 	orr	w1, w1, #0x2000
+  2002b4:	72a7e400 	movk	w0, #0x3f20, lsl #16
+  2002b8:	97ffff92 	bl	200100 <PUT32>
+  2002bc:	52801280 	mov	w0, #0x94                  	// #148
+  2002c0:	52800001 	mov	w1, #0x0                   	// #0
+  2002c4:	72a7e400 	movk	w0, #0x3f20, lsl #16
+  2002c8:	97ffff8e 	bl	200100 <PUT32>
+  2002cc:	d503201f 	nop
+  2002d0:	97ffff98 	bl	200130 <DUMMY>
+  2002d4:	71000673 	subs	w19, w19, #0x1
+  2002d8:	54ffffc1 	b.ne	2002d0 <uart_init+0xc8>  // b.any
+  2002dc:	52801300 	mov	w0, #0x98                  	// #152
+  2002e0:	528012d3 	mov	w19, #0x96                  	// #150
+  2002e4:	52880001 	mov	w1, #0x4000                	// #16384
+  2002e8:	72a7e400 	movk	w0, #0x3f20, lsl #16
+  2002ec:	97ffff85 	bl	200100 <PUT32>
+  2002f0:	97ffff90 	bl	200130 <DUMMY>
+  2002f4:	71000673 	subs	w19, w19, #0x1
+  2002f8:	54ffffc1 	b.ne	2002f0 <uart_init+0xe8>  // b.any
+  2002fc:	52801300 	mov	w0, #0x98                  	// #152
+  200300:	52800001 	mov	w1, #0x0                   	// #0
+  200304:	72a7e400 	movk	w0, #0x3f20, lsl #16
+  200308:	97ffff7e 	bl	200100 <PUT32>
+  20030c:	528a0c00 	mov	w0, #0x5060                	// #20576
+  200310:	52800061 	mov	w1, #0x3                   	// #3
+  200314:	72a7e420 	movk	w0, #0x3f21, lsl #16
+  200318:	97ffff7a 	bl	200100 <PUT32>
+  20031c:	f9400bf3 	ldr	x19, [sp, #16]
+  200320:	a8c27bfd 	ldp	x29, x30, [sp], #32
+  200324:	14000001 	b	200328 <DSB>
+
+0000000000200328 <DSB>:
+  200328:	d5033f9f 	dsb	sy
+  20032c:	d65f03c0 	ret
+
+0000000000200330 <DMB>:
+  200330:	d5033fbf 	dmb	sy
+  200334:	d65f03c0 	ret
+
+0000000000200338 <ISB>:
+  200338:	d5033fdf 	isb
+  20033c:	d65f03c0 	ret
+
+Disassembly of section .comment:
+
+0000000000000000 <.comment>:
+   0:	3a434347 	ccmn	w26, w3, #0x7, mi  // mi = first
+   4:	694c2820 	ldpsw	x0, x10, [x1, #96]
+   8:	6f72616e 	umlsl2	v14.4s, v11.8h, v2.h[3]
+   c:	43434720 	.inst	0x43434720 ; undefined
+  10:	322e3720 	orr	w0, w25, #0xfffc0000
+  14:	3130322d 	adds	w13, w17, #0xc0c
+  18:	31312e37 	adds	w23, w17, #0xc4b
+  1c:	2e372029 	usubl	v9.8h, v1.8b, v23.8b
+  20:	20312e32 	.inst	0x20312e32 ; undefined
+  24:	37313032 	tbnz	w18, #6, 2628 <_start-0x7d9d8>
+  28:	31313031 	adds	w17, w1, #0xc4c
+	...

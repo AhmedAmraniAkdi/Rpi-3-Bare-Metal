@@ -1,8 +1,3 @@
-/* 
- * engler, cs140e: simple unix-side bootloader implementation.  
- * see the lab for the protocol definition.
- */
-
 #include <assert.h>
 #include <fcntl.h>
 #include <math.h>
@@ -48,15 +43,15 @@ uint32_t get_op(int fd) {
     unsigned nbytes = get_uint32(fd);
     demand(nbytes < 512, pi sent a suspiciously long string);
     output("pi sent print: <");
-    for(int i = 0; i < nbytes; i++)
+    for(int i = 0; i < nbytes - 1; i++)
         output("%c", get_byte(fd));
     output(">\n");
-    return get_op(fd);
+    return 1;
 }
 
 
 void simple_boot(int fd, const uint8_t *buf, unsigned n) { 
-    //uint32_t op;
+    uint32_t op;
 
     // if n is not a multiple of 4, use roundup() in libunix.h
     n = roundup(n,4);
@@ -64,42 +59,48 @@ void simple_boot(int fd, const uint8_t *buf, unsigned n) {
 
     output("******************sending %d bytes\n", n);
 
-    // 0. we drain the initial pipe: can have garbage.   it's a little risky to
-    // use <get_op> since if the garbage matches the opcode, we will print
-    // nonsense.  could add a crc.
-    //while((op = get_op(fd)) != GET_PROG_INFO){
-    //    output("expected initial GET_PROG_INFO, got <%x>: discarding.\n", op);
-    //}
-    while(get_byte(fd) != 255){};
-    printf("\nsucess\n");
-    // 1. reply to the GET_PROG_INFO
-    /*put_uint32(fd, PUT_PROG_INFO);
+    while((op = get_op(fd)) != GET_PROG_INFO){
+        output("expected initial GET_PROG_INFO, got <%x>: discarding.\n", op);
+    }
+
+    put_uint32(fd, PUT_PROG_INFO);
+    
     put_uint32(fd, ARMBASE);
     put_uint32(fd, n);
-    put_uint32(fd, crc32(buf, n));
+    unsigned cksum = crc32(buf, n);
+    put_uint32(fd, cksum);
 
-    // 2. drain any extra GET_PROG_INFOS
-    while((op = get_op(fd)) == GET_PROG_INFO){};
+    // drain any extra GET_PROG_INFOS
+    do{
+        op = get_op(fd); // last one will print
+    } while(op == GET_PROG_INFO);
 
-    // 3. check that we received a GET_CODE
+    output("Pi read addr : %x\n", get_uint32(fd));
+    output("Pi read nbytes : %x\n", get_uint32(fd));
+    op = get_uint32(fd);
+    output("Cksum is %x, Pi read cksum : %x\n", cksum, op);
+    if(cksum != op){
+        panic("Bad cksum");
+    }
+
     if(get_uint32(fd) != GET_CODE){
         panic("GET_CODE not received");
     }
-    printf("got GET_CODE\n");
-    if(get_uint32(fd) != crc32(buf, n)){
-        panic("bad check sum");
-    }
-    printf("good checksum\n");
-    // 4. handle it: send a PUT_CODE massage.
-    printf("sending code\n");
     put_uint32(fd, PUT_CODE);
+
+    printf("Starting to transmit code\n");
+    get_op(fd);
+
     for(int i = 0; i < n; i++){
         put_byte(fd, buf[i]);
     }
 
+    op = get_op(fd);
+    if(op == BAD_CODE_CKSUM){
+        panic("Bad cksum");
+    }
     // 5. Wait for success
-    ck_eq32(fd, "BOOT_SUCCESS mismatch", BOOT_SUCCESS, get_op(fd));
+    ck_eq32(fd, "BOOT_SUCCESS mismatch", BOOT_SUCCESS, op);
     output("bootloader: Done.\n");
 
-    get_op(fd);*/
 }

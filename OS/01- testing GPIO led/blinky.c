@@ -18,8 +18,17 @@ int main(void) {
   // FIXME: STEP 1: Set GPIO Pin 16 as output.
   *GPIO_FSEL1 &= ~(7<<18);
   *GPIO_FSEL1 |= 1<<18;
+
+  *GPIO_FSEL1 &= ~(7<<15);
+  *GPIO_FSEL1 |= 1<<15;
+
+  *GPIO_FSEL1 &= ~(7<<12);
+  *GPIO_FSEL1 |= 1<<12;
   
   // FIXME: STEP 2: Continuously set and clear GPIO 16.
+  *GPIO_SET0 = 1<<15;
+  *GPIO_SET0 = 1<<14;
+
   while(1){
     *GPIO_SET0 = 1<<16;
     spin_sleep_ms(1000);

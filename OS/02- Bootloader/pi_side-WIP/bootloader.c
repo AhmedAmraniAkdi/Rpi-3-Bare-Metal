@@ -1,18 +1,12 @@
-/* engler, cs140e.
- *
- * very simple bootloader.  more robust than xmodem, which seems to 
- * have bugs in terms of recovery with inopportune timeouts.
- */
-
 #include "rpi.h"
 #include "mini_uart.h"
 #include "timer.h"
 #include "gpio.h"
 
 #define __SIMPLE_IMPL__
-#include "../shared-code/simple-boot.h"         // holds crc32
+#include "../shared-code/simple-boot.h"   
 
-// blocking calls to send / receive a single byte from the uart.
+
 static void put_byte(unsigned char uc)  { 
     uart_putc(uc); 
 }
@@ -34,17 +28,13 @@ static void put_uint(unsigned u) {
     put_byte((u >> 24) & 0xff);
 }
 
-// send the unix side an error code and reboot.
+
 static void die(int code) {
     put_uint(code);
     reboot();
 }
 
-// We do not have interrupts and the UART can only hold 
-// 8 bytes before it starts dropping them.   so if you print at the
-// same time the UNIX end can send you data, you will likely
-// lose some, leading to weird bugs.  If you print, safest is 
-// to do right after you have completely received a message.
+
 void putk(const char *msg) {
     put_uint(PRINT_STRING);
     int n;
@@ -55,94 +45,56 @@ void putk(const char *msg) {
         put_byte(msg[n]);
 }
 
-// send a <GET_PROG_INFO> message every 300ms.
-// 
-// NOTE: look at the idiom for comparing the current usec count to 
-// when we started.  
-void wait_for_data(void) {
-    while(1) {
-        put_uint(GET_PROG_INFO);
-        gpio_write(GPIO_PIN16, 0);
-        unsigned s = timer_get_time();
-        // the funny subtraction is to prevent wrapping.
-        while((timer_get_time() - s) < 300*1000) {
-            // the UART says there is data: start eating it!
-            if(uart_can_getc())
-                return;
-        }
-        gpio_write(GPIO_PIN16, 1);
-    }
-}
 
 void notmain(void) {
-    gpio_set_function(GPIO_PIN16, GPIO_FUNC_OUTPUT);
-    gpio_write(GPIO_PIN16, 1);
 
     uart_init(115200);
 
-    //unsigned ra=0;
     while(1)
     {   
-        while(1)
+        unsigned s = timer_get_time();
+        while((timer_get_time() - s) < 100*1000)
         {
-            if(GET32(AUX_MU_LSR_REG)&0x20) break;
+            put_uint(GET_PROG_INFO);
         }
-        PUT32(AUX_MU_IO_REG,255);
+        if(get_uint() == PUT_PROG_INFO){
+            break;
+        }
     }
-
-
-/*
-    // 1. keep sending GET_PROG_INFO until there is data.
-    wait_for_data();
-    gpio_write(GPIO_PIN16, 1);
-    // 2. expect: [PUT_PROG_INFO, addr, nbytes, cksum] 
-    //    we echo cksum back in step 4 to help debugging.
-    if(get_uint() != PUT_PROG_INFO){
-        die(NOT_PUT_PROG_INFO);
-    }
-
+    // [PUT_PROG_INFO, addr, nbytes, cksum] 
     unsigned addr = get_uint();
     unsigned n = get_uint();
     unsigned cksum = get_uint();
 
-    // 3. If the binary will collide with us, abort. 
-    //    you can assume that code must be below where the booloader code
-    //    gap starts.
-    if(addr < ARMBASE){
-        die(BAD_CODE_ADDR);
-    }
-
-    // 4. send [GET_CODE, cksum] back.
-    put_uint(GET_CODE);
+    put_uint(PRINT_STRING);
+    putk("Pi says: You sent:");
+    put_uint(addr);
+    put_uint(n);
     put_uint(cksum);
 
-
-    // 5. expect: [PUT_CODE, <code>]
-    //  read each sent byte and write it starting at 
-    //  ARMBASE using PUT8
-
+    put_uint(GET_CODE);
     if(get_uint() != PUT_CODE){
-        die(NOT_PUT_CODE);
+        die(BOOT_ERROR);
     }
+
+    put_uint(PRINT_STRING);
+    putk("Pi says: starting to receive the code");
 
     for(int i = 0; i < n; i++){
         PUT8(ARMBASE + i, get_byte());
     }
 
     // 6. verify the cksum of the copied code.
-    if(cksum != crc32((void*)ARMBASE, n)){
+    if(cksum != crc32((char*)ARMBASE, n)){
         die(BAD_CODE_CKSUM);
     }
-    // 7. no previous failures: send back a BOOT_SUCCESS!
+
     put_uint(BOOT_SUCCESS);
-
     delay_ms(500);
-
-    putk((char*)ARMBASE); // send the program?
 
     // run what we got.
     BRANCHTO(ARMBASE);
 
     // should not get back here, but just in case.
-    reboot();*/
+    reboot();
 }
