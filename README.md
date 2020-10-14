@@ -1,4 +1,4 @@
-Repository for my raspberry pi 3B+ operative system project, goal is to implement a simple OS.
+Repository for my raspberry pi 3B+ bare metal project, goal is to do embedded stuff
 
 References:
 
