@@ -584,62 +584,81 @@ Disassembly of section .text:
   c0:	a8c27bfd 	ldp	x29, x30, [sp], #32
   c4:	14000000 	b	0 <PUT32>
 
-00000000000000c8 <uart_init>:
+00000000000000c8 <uart_puts>:
   c8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
-  cc:	52800021 	mov	w1, #0x1                   	// #1
-  d0:	910003fd 	mov	x29, sp
-  d4:	a90153f3 	stp	x19, x20, [sp, #16]
-  d8:	2a0003f3 	mov	w19, w0
-  dc:	528a0080 	mov	w0, #0x5004                	// #20484
-  e0:	528a0c14 	mov	w20, #0x5060                	// #20576
-  e4:	72a7e420 	movk	w0, #0x3f21, lsl #16
-  e8:	94000000 	bl	0 <PUT32>
-  ec:	72a7e434 	movk	w20, #0x3f21, lsl #16
-  f0:	11000673 	add	w19, w19, #0x1
-  f4:	94000000 	bl	0 <DSB>
-  f8:	528a0880 	mov	w0, #0x5044                	// #20548
-  fc:	52800001 	mov	w1, #0x0                   	// #0
- 100:	72a7e420 	movk	w0, #0x3f21, lsl #16
- 104:	94000000 	bl	0 <PUT32>
- 108:	2a1403e0 	mov	w0, w20
- 10c:	52800001 	mov	w1, #0x0                   	// #0
- 110:	94000000 	bl	0 <PUT32>
- 114:	531d7273 	lsl	w19, w19, #3
- 118:	528a0980 	mov	w0, #0x504c                	// #20556
- 11c:	52800061 	mov	w1, #0x3                   	// #3
- 120:	72a7e420 	movk	w0, #0x3f21, lsl #16
- 124:	94000000 	bl	0 <PUT32>
- 128:	528a0a00 	mov	w0, #0x5050                	// #20560
- 12c:	52800001 	mov	w1, #0x0                   	// #0
- 130:	72a7e420 	movk	w0, #0x3f21, lsl #16
- 134:	94000000 	bl	0 <PUT32>
- 138:	528a0900 	mov	w0, #0x5048                	// #20552
- 13c:	528000c1 	mov	w1, #0x6                   	// #6
- 140:	72a7e420 	movk	w0, #0x3f21, lsl #16
- 144:	94000000 	bl	0 <PUT32>
- 148:	52965001 	mov	w1, #0xb280                	// #45696
- 14c:	528a0d00 	mov	w0, #0x5068                	// #20584
- 150:	72a1dcc1 	movk	w1, #0xee6, lsl #16
- 154:	72a7e420 	movk	w0, #0x3f21, lsl #16
- 158:	1ad30821 	udiv	w1, w1, w19
- 15c:	94000000 	bl	0 <PUT32>
- 160:	52800041 	mov	w1, #0x2                   	// #2
- 164:	528001c0 	mov	w0, #0xe                   	// #14
- 168:	94000000 	bl	0 <gpio_set_function>
- 16c:	52800041 	mov	w1, #0x2                   	// #2
- 170:	528001e0 	mov	w0, #0xf                   	// #15
- 174:	94000000 	bl	0 <gpio_set_function>
+  cc:	910003fd 	mov	x29, sp
+  d0:	f9000bf3 	str	x19, [sp, #16]
+  d4:	aa0003f3 	mov	x19, x0
+  d8:	39400000 	ldrb	w0, [x0]
+  dc:	350000c0 	cbnz	w0, f4 <uart_puts+0x2c>
+  e0:	1400000d 	b	114 <uart_puts+0x4c>
+  e4:	38401660 	ldrb	w0, [x19], #1
+  e8:	94000000 	bl	88 <uart_putc>
+  ec:	39400260 	ldrb	w0, [x19]
+  f0:	34000120 	cbz	w0, 114 <uart_puts+0x4c>
+  f4:	7100281f 	cmp	w0, #0xa
+  f8:	54ffff61 	b.ne	e4 <uart_puts+0x1c>  // b.any
+  fc:	528001a0 	mov	w0, #0xd                   	// #13
+ 100:	94000000 	bl	88 <uart_putc>
+ 104:	38401660 	ldrb	w0, [x19], #1
+ 108:	94000000 	bl	88 <uart_putc>
+ 10c:	39400260 	ldrb	w0, [x19]
+ 110:	35ffff20 	cbnz	w0, f4 <uart_puts+0x2c>
+ 114:	f9400bf3 	ldr	x19, [sp, #16]
+ 118:	a8c27bfd 	ldp	x29, x30, [sp], #32
+ 11c:	d65f03c0 	ret
+
+0000000000000120 <uart_init>:
+ 120:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+ 124:	528a0080 	mov	w0, #0x5004                	// #20484
+ 128:	52800021 	mov	w1, #0x1                   	// #1
+ 12c:	72a7e420 	movk	w0, #0x3f21, lsl #16
+ 130:	910003fd 	mov	x29, sp
+ 134:	f9000bf3 	str	x19, [sp, #16]
+ 138:	94000000 	bl	0 <PUT32>
+ 13c:	94000000 	bl	0 <DSB>
+ 140:	528a0c13 	mov	w19, #0x5060                	// #20576
+ 144:	528a0880 	mov	w0, #0x5044                	// #20548
+ 148:	52800001 	mov	w1, #0x0                   	// #0
+ 14c:	72a7e420 	movk	w0, #0x3f21, lsl #16
+ 150:	94000000 	bl	0 <PUT32>
+ 154:	72a7e433 	movk	w19, #0x3f21, lsl #16
+ 158:	52800001 	mov	w1, #0x0                   	// #0
+ 15c:	2a1303e0 	mov	w0, w19
+ 160:	94000000 	bl	0 <PUT32>
+ 164:	528a0980 	mov	w0, #0x504c                	// #20556
+ 168:	52800061 	mov	w1, #0x3                   	// #3
+ 16c:	72a7e420 	movk	w0, #0x3f21, lsl #16
+ 170:	94000000 	bl	0 <PUT32>
+ 174:	528a0a00 	mov	w0, #0x5050                	// #20560
  178:	52800001 	mov	w1, #0x0                   	// #0
- 17c:	528001c0 	mov	w0, #0xe                   	// #14
- 180:	94000000 	bl	0 <gpio_set_pullupdownoff>
- 184:	52800001 	mov	w1, #0x0                   	// #0
- 188:	528001e0 	mov	w0, #0xf                   	// #15
- 18c:	94000000 	bl	0 <gpio_set_pullupdownoff>
- 190:	2a1403e0 	mov	w0, w20
- 194:	52800061 	mov	w1, #0x3                   	// #3
- 198:	a94153f3 	ldp	x19, x20, [sp, #16]
- 19c:	a8c27bfd 	ldp	x29, x30, [sp], #32
- 1a0:	14000000 	b	0 <PUT32>
+ 17c:	72a7e420 	movk	w0, #0x3f21, lsl #16
+ 180:	94000000 	bl	0 <PUT32>
+ 184:	528a0900 	mov	w0, #0x5048                	// #20552
+ 188:	528000c1 	mov	w1, #0x6                   	// #6
+ 18c:	72a7e420 	movk	w0, #0x3f21, lsl #16
+ 190:	94000000 	bl	0 <PUT32>
+ 194:	528a0d00 	mov	w0, #0x5068                	// #20584
+ 198:	528021c1 	mov	w1, #0x10e                 	// #270
+ 19c:	72a7e420 	movk	w0, #0x3f21, lsl #16
+ 1a0:	94000000 	bl	0 <PUT32>
+ 1a4:	52800041 	mov	w1, #0x2                   	// #2
+ 1a8:	528001c0 	mov	w0, #0xe                   	// #14
+ 1ac:	94000000 	bl	0 <gpio_set_function>
+ 1b0:	52800041 	mov	w1, #0x2                   	// #2
+ 1b4:	528001e0 	mov	w0, #0xf                   	// #15
+ 1b8:	94000000 	bl	0 <gpio_set_function>
+ 1bc:	52800001 	mov	w1, #0x0                   	// #0
+ 1c0:	528001c0 	mov	w0, #0xe                   	// #14
+ 1c4:	94000000 	bl	0 <gpio_set_pullupdownoff>
+ 1c8:	52800001 	mov	w1, #0x0                   	// #0
+ 1cc:	528001e0 	mov	w0, #0xf                   	// #15
+ 1d0:	94000000 	bl	0 <gpio_set_pullupdownoff>
+ 1d4:	2a1303e0 	mov	w0, w19
+ 1d8:	f9400bf3 	ldr	x19, [sp, #16]
+ 1dc:	a8c27bfd 	ldp	x29, x30, [sp], #32
+ 1e0:	52800061 	mov	w1, #0x3                   	// #3
+ 1e4:	14000000 	b	0 <PUT32>
 
 Disassembly of section .comment:
 
@@ -649,9 +668,9 @@ Disassembly of section .comment:
    8:	72616e69 	.inst	0x72616e69 ; undefined
    c:	4347206f 	.inst	0x4347206f ; undefined
   10:	2e372043 	usubl	v3.8h, v2.8b, v23.8b
-  14:	30322d32 	adr	x18, 645b9 <uart_init+0x644f1>
+  14:	30322d32 	adr	x18, 645b9 <uart_init+0x64499>
   18:	312e3731 	adds	w17, w25, #0xb8d
-  1c:	37202931 	tbnz	w17, #4, 540 <uart_init+0x478>
+  1c:	37202931 	tbnz	w17, #4, 540 <uart_init+0x420>
   20:	312e322e 	adds	w14, w17, #0xb8c
   24:	31303220 	adds	w0, w17, #0xc0c
   28:	31303137 	adds	w23, w9, #0xc0c

@@ -28,7 +28,16 @@ void uart_putc(unsigned c){
     PUT32(AUX_MU_IO_REG, c);
 }
 
-void uart_init(unsigned baudrate){
+void uart_puts(char* s){
+    while(*s) {
+        /* convert newline to carrige return + newline */
+        if(*s=='\n')
+            uart_putc('\r');
+        uart_putc(*s++);
+    }
+}
+
+void uart_init(){
 
     // enable mini uart
     PUT32(AUX_ENABLES, 1);
@@ -49,8 +58,7 @@ void uart_init(unsigned baudrate){
     // clear FIFOs
     PUT32(AUX_MU_IIR_REG, 6);
     //250000000/baudrate/8 - 1 = divisor
-    unsigned divisor = 250000000/(8*(baudrate + 1));
-    PUT32(AUX_MU_BAUD_REG, divisor);
+    PUT32(AUX_MU_BAUD_REG, 270);
 
     // setting gpios to alternate functions and pull off
     gpio_set_function(GPIO_PIN14, GPIO_FUNC_ALT5);
