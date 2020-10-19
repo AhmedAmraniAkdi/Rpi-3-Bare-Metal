@@ -14,4 +14,8 @@ https://github.com/dwelch67/raspberrypi-three
 
 https://jsandler18.github.io/
 
-https://github.com/LdB-ECM/Raspberry-Pi/blob/master/10_virtualmemory/rpi-SmartStart.c  ( I like the programming style of this one)
+https://github.com/bztsrc/raspi3-tutorial
+
+https://github.com/LdB-ECM/Raspberry-Pi/blob/master/10_virtualmemory/rpi-SmartStart.c  
+
+http://pages.cs.wisc.edu/~remzi/OSTEP/#book-chapters
