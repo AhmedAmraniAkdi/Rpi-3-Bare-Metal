@@ -2,24 +2,27 @@
 
 // symbol created by libpi/memmap, placed at the end
 // of all the code/data in a pi binary file.
-extern char __heap_start__;
+extern unsigned int __heap_start__;
 
 // track if initialized.
 static int init_p;
+
+// heap pointer
+static void* heap_ptr;
 
 /*
  * Return a memory block of at least size <nbytes>
  * Notes:
  *  - There is no free, so is trivial: should be just 
  *    a few lines of code.
- *  - The returned pointer should always be 4-byte aligned.  
- *    Easiest way is to make sure the heap pointer starts 4-byte
+ *  - The returned pointer should always be 8-byte aligned.  
+ *    Easiest way is to make sure the heap pointer starts 8-byte
  *    and you always round up the number of bytes.  Make sure
  *    you put an assertion in.  
  */
 void *kmalloc(unsigned nbytes) {
     demand(init_p, calling before initialized);
-    unimplemented();
+    
 }
 
 // address of returned pointer should be a multiple of

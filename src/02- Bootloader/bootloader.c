@@ -174,6 +174,7 @@ int notmain ( void )
                             uart_putc(0x0A);
                             while(1)
                             {
+                                uart_puts("Press g or G to start program:\n");
                                 rb=uart_getc();
                                 if((rb=='g')||(rb=='G'))
                                 {
