@@ -1,4 +1,7 @@
 #include "rpi.h"
+#include "assert.h"
+#include "helper_macros.h"
+#include <stdint.h>
 
 // symbol created by libpi/memmap, placed at the end
 // of all the code/data in a pi binary file.
@@ -19,21 +22,40 @@ static void* heap_ptr;
  *    Easiest way is to make sure the heap pointer starts 8-byte
  *    and you always round up the number of bytes.  Make sure
  *    you put an assertion in.  
+ * 8 since 64bits
  */
 void *kmalloc(unsigned nbytes) {
-    demand(init_p, calling before initialized);
+    if(!init_p)
+        kmalloc_init();
     
+    nbytes = pi_roundup(nbytes, 8);
+
+    void* new_heap_ptr = heap_ptr;
+    heap_ptr = heap_ptr + nbytes;
+
+    demand(is_aligned_ptr(new_heap_ptr, 8), alignment not multiple of 8!);
+
+    return new_heap_ptr;
 }
 
 // address of returned pointer should be a multiple of
 // alignment.
 void *kmalloc_aligned(unsigned nbytes, unsigned alignment) {
-    demand(init_p, calling before initialized);
+    if(!init_p)
+        kmalloc_init();
 
-    if(alignment <= 4)
+    if(alignment <= 8)
         return kmalloc(nbytes);
-    demand(alignment % 4 == 0, weird alignment: not a multiple of 4!);
-    unimplemented();
+    demand(alignment % 8 == 0, weird alignment: not a multiple of 8!);
+    
+    nbytes = pi_roundup(nbytes, alignment);
+
+    void* new_heap_ptr = heap_ptr;
+    heap_ptr = heap_ptr + nbytes;
+
+    demand(is_aligned_ptr(new_heap_ptr, alignment), "alignment not multiple of %d!", alignment);
+
+    return new_heap_ptr;
 }
 
 /*
@@ -48,7 +70,10 @@ void kmalloc_init(void) {
     if(init_p)
         return;
     init_p = 1;
-    unimplemented();
+    
+    heap_ptr = __heap_start__;
+
+    output("Starting Heap\nheap_start: %u -- heap_ptr: %p", __heap_start__, heap_ptr);
 }
 
 /* 
@@ -56,7 +81,10 @@ void kmalloc_init(void) {
  * pointer back to the beginning.
  */
 void kfree_all(void) {
-    unimplemented();
+    if(!init_p)
+        kmalloc_init();
+    
+    heap_ptr = __heap_start__;
 }
 
 // return pointer to the first free byte.
@@ -65,5 +93,8 @@ void kfree_all(void) {
 //    assert(<addr> < kmalloc_heap_ptr());
 // 
 void *kmalloc_heap_ptr(void) {
-    unimplemented();
+    if(!init_p)
+        kmalloc_init();
+    
+    return heap_ptr;
 }

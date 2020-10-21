@@ -1,5 +1,4 @@
 //https://github.com/dddrrreee/cs140e-20win/blob/master/libpi/libc/helper-macros.h
-// helper functions to deal with bitfields and sending structures to PUT/GET
 #ifndef __RPI_MACROS_H__
 #define __RPI_MACROS_H__
 

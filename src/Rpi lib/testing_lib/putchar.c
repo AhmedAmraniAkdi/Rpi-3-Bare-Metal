@@ -1,5 +1,5 @@
-#include "../rpi.h"
-#include "../peripherals/mini_uart.h"
+#include "rpi.h"
+#include "mini_uart.h"
 
 static int internal_putchar(int c) { uart_putc(c); return c; }
 

@@ -1,4 +1,3 @@
-/* trivial, sleazy test of kmalloc: don't modify!  */
 #include "rpi.h"
 
 void notmain() {

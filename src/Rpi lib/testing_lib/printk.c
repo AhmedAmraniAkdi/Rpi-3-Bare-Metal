@@ -1,6 +1,6 @@
 #include <stdarg.h>
 
-#include "../rpi.h"
+#include "rpi.h"
 #include "va-printk.h"
 
 int printk(const char *fmt, ...) {

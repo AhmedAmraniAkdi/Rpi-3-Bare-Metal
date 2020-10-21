@@ -1,4 +1,4 @@
-#include "../rpi.h"
+#include "rpi.h"
 #include "timer.h"
 
 void delay(unsigned ticks) {

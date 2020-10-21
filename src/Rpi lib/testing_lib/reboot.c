@@ -1,4 +1,4 @@
-#include "../rpi.h"
+#include "rpi.h"
 
 // not finding much documentation
 // all i found is references to "power management, reset controller and watchdog" on bcm2835, but no documentation
@@ -24,5 +24,5 @@ void reboot(void) {
 void clean_reboot(void) {
     putk("DONE!!!\n");
     delay_ms(100);       // (hopefully) enough time for message to get flushed.
-    rpi_reboot();
+    reboot();
 }

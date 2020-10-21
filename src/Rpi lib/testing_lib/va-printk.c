@@ -9,7 +9,7 @@
        (See also below under NOTES.)
 */
 #include "assert.h"
-#include "../rpi.h"
+#include "rpi.h"
 
 
 #if 0

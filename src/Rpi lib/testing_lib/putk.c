@@ -1,4 +1,4 @@
-#include "../rpi.h"
+#include "rpi.h"
 
 int internal_putk(const char *p) {
     for(; *p; p++)
