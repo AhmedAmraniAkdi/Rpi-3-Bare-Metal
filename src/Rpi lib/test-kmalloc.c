@@ -1,5 +1,8 @@
-#include "rpi.h"
-#include "assert.h"
+#include "testing_lib/rpi.h"
+#include "testing_lib/mini_uart.h"
+#include "testing_lib/assert.h"
+#include "testing_lib/helper_macros.h"
+#include <stdint.h>
 
 void notmain() {
     uart_init();
@@ -27,7 +30,7 @@ void notmain() {
     }
 
     void *p = kmalloc_aligned(1,64);
-    demand((unsigned)p % 64 == 0, bug in kmalloc_aligned);
+    demand(is_aligned_ptr(p, 64), bug in kmalloc_aligned);
 
     kfree_all();
     void *heap1 = kmalloc_heap_ptr();

@@ -1,0 +1,29 @@
+CC= aarch64-none-elf-gcc
+
+LIBPI = testing_lib
+CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles -ffreestanding 
+
+SRC = test-kmalloc.c 
+OBJS = $(SRC:.c=.o)
+
+all : libpi kernel8.img 
+
+libpi:
+	make -C $(LIBPI)
+
+start.o : start.s
+	aarch64-none-elf-as start.s -o start.o
+
+kernel8.img : mmap start.o $(OBJS) $(LIBPI)/libpi.a
+	aarch64-none-elf-ld start.o $(OBJS) $(LIBPI)/libpi.a -T mmap -o test.elf
+	aarch64-none-elf-objdump -D test.elf > test.list
+	aarch64-none-elf-objcopy test.elf -O binary kernel8.img
+
+clean :
+	rm -f *.o *.bin *.elf *.list *.img *~ Makefile.bak
+	make -C $(LIBPI) clean
+
+depend:
+	makedepend -I$(LIBPI) *.[ch] 
+
+.PHONY: clean depend libpi

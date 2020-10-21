@@ -14,6 +14,24 @@ static int init_p;
 static void* heap_ptr;
 
 /*
+ * One-time initialization, called before kmalloc 
+ * to setup heap. 
+ *    - should be just a few lines of code.
+ *    - sets heap pointer to the location of 
+ *      __heap_start__.   print this to make sure
+ *      it makes sense!
+ */
+void kmalloc_init(void) {
+    if(init_p)
+        return;
+    init_p = 1;
+    
+    heap_ptr = &__heap_start__;
+
+    output("Starting Heap\nheap_start: %u -- heap_ptr: %p", __heap_start__, heap_ptr);
+}
+
+/*
  * Return a memory block of at least size <nbytes>
  * Notes:
  *  - There is no free, so is trivial: should be just 
@@ -31,7 +49,7 @@ void *kmalloc(unsigned nbytes) {
     nbytes = pi_roundup(nbytes, 8);
 
     void* new_heap_ptr = heap_ptr;
-    heap_ptr = heap_ptr + nbytes;
+    heap_ptr = (char*)heap_ptr + nbytes;
 
     demand(is_aligned_ptr(new_heap_ptr, 8), alignment not multiple of 8!);
 
@@ -51,30 +69,13 @@ void *kmalloc_aligned(unsigned nbytes, unsigned alignment) {
     nbytes = pi_roundup(nbytes, alignment);
 
     void* new_heap_ptr = heap_ptr;
-    heap_ptr = heap_ptr + nbytes;
+    heap_ptr = (char*)heap_ptr + nbytes;
 
     demand(is_aligned_ptr(new_heap_ptr, alignment), "alignment not multiple of %d!", alignment);
 
     return new_heap_ptr;
 }
 
-/*
- * One-time initialization, called before kmalloc 
- * to setup heap. 
- *    - should be just a few lines of code.
- *    - sets heap pointer to the location of 
- *      __heap_start__.   print this to make sure
- *      it makes sense!
- */
-void kmalloc_init(void) {
-    if(init_p)
-        return;
-    init_p = 1;
-    
-    heap_ptr = __heap_start__;
-
-    output("Starting Heap\nheap_start: %u -- heap_ptr: %p", __heap_start__, heap_ptr);
-}
 
 /* 
  * free all allocated memory: reset the heap 
@@ -84,7 +85,7 @@ void kfree_all(void) {
     if(!init_p)
         kmalloc_init();
     
-    heap_ptr = __heap_start__;
+    heap_ptr = &__heap_start__;
 }
 
 // return pointer to the first free byte.

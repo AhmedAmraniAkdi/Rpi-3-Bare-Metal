@@ -1,4 +1,5 @@
 #include "rpi.h"
+#include "timer.h"
 
 // not finding much documentation
 // all i found is references to "power management, reset controller and watchdog" on bcm2835, but no documentation
