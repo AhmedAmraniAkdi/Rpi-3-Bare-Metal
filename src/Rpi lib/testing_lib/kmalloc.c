@@ -28,7 +28,7 @@ void kmalloc_init(void) {
     
     heap_ptr = &__heap_start__;
 
-    output("Starting Heap\nheap_start: %u -- heap_ptr: %p", __heap_start__, heap_ptr);
+    output("Starting Heap\nheap_start: %p -- heap_ptr: %p\n", &__heap_start__, heap_ptr);
 }
 
 /*
@@ -51,7 +51,8 @@ void *kmalloc(unsigned nbytes) {
     void* new_heap_ptr = heap_ptr;
     heap_ptr = (char*)heap_ptr + nbytes;
 
-    demand(is_aligned_ptr(new_heap_ptr, 8), alignment not multiple of 8!);
+    demand(heap_ptr - new_heap_ptr == nbytes, "block != nbytes");
+    demand(is_aligned_ptr(new_heap_ptr, 8), "alignment not multiple of 8!");
 
     return new_heap_ptr;
 }
@@ -64,13 +65,14 @@ void *kmalloc_aligned(unsigned nbytes, unsigned alignment) {
 
     if(alignment <= 8)
         return kmalloc(nbytes);
-    demand(alignment % 8 == 0, weird alignment: not a multiple of 8!);
+    demand(alignment % 8 == 0, "weird alignment: not a multiple of 8!");
     
     nbytes = pi_roundup(nbytes, alignment);
+    
+    void* new_heap_ptr = (void*) pi_roundup((uintptr_t)heap_ptr, alignment);
+    heap_ptr = (char*)new_heap_ptr + nbytes;
 
-    void* new_heap_ptr = heap_ptr;
-    heap_ptr = (char*)heap_ptr + nbytes;
-
+    demand(heap_ptr - new_heap_ptr == nbytes, "block != nbytes");
     demand(is_aligned_ptr(new_heap_ptr, alignment), "alignment not multiple of %d!", alignment);
 
     return new_heap_ptr;

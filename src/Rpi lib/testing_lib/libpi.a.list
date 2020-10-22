@@ -684,16 +684,16 @@ kmalloc.o:     file format elf64-littleaarch64
 Disassembly of section .text:
 
 0000000000000000 <kmalloc_init.part.0>:
-   0:	90000000 	adrp	x0, 0 <__heap_start__>
-   4:	90000003 	adrp	x3, 0 <kmalloc_init.part.0>
-   8:	91000064 	add	x4, x3, #0x0
-   c:	91000002 	add	x2, x0, #0x0
-  10:	b9400001 	ldr	w1, [x0]
-  14:	52800025 	mov	w5, #0x1                   	// #1
-  18:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
-  1c:	b9000065 	str	w5, [x3]
-  20:	91000000 	add	x0, x0, #0x0
-  24:	f9000482 	str	x2, [x4, #8]
+   0:	90000001 	adrp	x1, 0 <kmalloc_init.part.0>
+   4:	91000023 	add	x3, x1, #0x0
+   8:	90000002 	adrp	x2, 0 <__heap_start__>
+   c:	91000042 	add	x2, x2, #0x0
+  10:	52800024 	mov	w4, #0x1                   	// #1
+  14:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
+  18:	b9000024 	str	w4, [x1]
+  1c:	91000000 	add	x0, x0, #0x0
+  20:	aa0203e1 	mov	x1, x2
+  24:	f9000462 	str	x2, [x3, #8]
   28:	14000000 	b	0 <printk>
   2c:	d503201f 	nop
 
@@ -729,7 +729,7 @@ Disassembly of section .text:
   98:	91000084 	add	x4, x4, #0x0
   9c:	91000042 	add	x2, x2, #0x0
   a0:	91000021 	add	x1, x1, #0x0
-  a4:	528006c3 	mov	w3, #0x36                  	// #54
+  a4:	528006e3 	mov	w3, #0x37                  	// #55
   a8:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
   ac:	91000000 	add	x0, x0, #0x0
   b0:	94000000 	bl	0 <printk>
@@ -746,108 +746,128 @@ Disassembly of section .text:
 00000000000000d8 <kmalloc_aligned>:
   d8:	a9bd7bfd 	stp	x29, x30, [sp, #-48]!
   dc:	910003fd 	mov	x29, sp
-  e0:	a90153f3 	stp	x19, x20, [sp, #16]
-  e4:	90000014 	adrp	x20, 0 <kmalloc_init.part.0>
-  e8:	f90013f5 	str	x21, [sp, #32]
-  ec:	2a0003f5 	mov	w21, w0
-  f0:	b9400280 	ldr	w0, [x20]
-  f4:	2a0103f3 	mov	w19, w1
-  f8:	34000740 	cbz	w0, 1e0 <kmalloc_aligned+0x108>
-  fc:	7100227f 	cmp	w19, #0x8
- 100:	54000769 	b.ls	1ec <kmalloc_aligned+0x114>  // b.plast
- 104:	f90017b6 	str	x22, [x29, #40]
- 108:	f2400a7f 	tst	x19, #0x7
- 10c:	540004e1 	b.ne	1a8 <kmalloc_aligned+0xd0>  // b.any
- 110:	91000294 	add	x20, x20, #0x0
- 114:	510006b5 	sub	w21, w21, #0x1
- 118:	4b1303e0 	neg	w0, w19
- 11c:	0b1302b5 	add	w21, w21, w19
- 120:	0a150015 	and	w21, w0, w21
- 124:	2a1303e0 	mov	w0, w19
- 128:	f9400696 	ldr	x22, [x20, #8]
- 12c:	d1000400 	sub	x0, x0, #0x1
- 130:	8b1502d5 	add	x21, x22, x21
- 134:	f9000695 	str	x21, [x20, #8]
- 138:	ea0002df 	tst	x22, x0
- 13c:	540000e1 	b.ne	158 <kmalloc_aligned+0x80>  // b.any
- 140:	aa1603e0 	mov	x0, x22
- 144:	f94013f5 	ldr	x21, [sp, #32]
- 148:	a94153f3 	ldp	x19, x20, [sp, #16]
- 14c:	f94017b6 	ldr	x22, [x29, #40]
- 150:	a8c37bfd 	ldp	x29, x30, [sp], #48
- 154:	d65f03c0 	ret
- 158:	94000000 	bl	0 <rpi_reset_putc>
- 15c:	90000002 	adrp	x2, 0 <kmalloc_init.part.0>
- 160:	91000042 	add	x2, x2, #0x0
- 164:	2a1303e5 	mov	w5, w19
- 168:	91002042 	add	x2, x2, #0x8
- 16c:	90000004 	adrp	x4, 0 <kmalloc_init.part.0>
- 170:	90000001 	adrp	x1, 0 <kmalloc_init.part.0>
- 174:	91000084 	add	x4, x4, #0x0
- 178:	91000021 	add	x1, x1, #0x0
- 17c:	52800943 	mov	w3, #0x4a                  	// #74
- 180:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
- 184:	91000000 	add	x0, x0, #0x0
- 188:	94000000 	bl	0 <printk>
- 18c:	94000000 	bl	0 <clean_reboot>
- 190:	f94013f5 	ldr	x21, [sp, #32]
- 194:	aa1603e0 	mov	x0, x22
- 198:	f94017b6 	ldr	x22, [x29, #40]
- 19c:	a94153f3 	ldp	x19, x20, [sp, #16]
- 1a0:	a8c37bfd 	ldp	x29, x30, [sp], #48
- 1a4:	d65f03c0 	ret
- 1a8:	94000000 	bl	0 <rpi_reset_putc>
- 1ac:	90000002 	adrp	x2, 0 <kmalloc_init.part.0>
- 1b0:	91000042 	add	x2, x2, #0x0
- 1b4:	91002042 	add	x2, x2, #0x8
- 1b8:	90000004 	adrp	x4, 0 <kmalloc_init.part.0>
- 1bc:	90000001 	adrp	x1, 0 <kmalloc_init.part.0>
- 1c0:	91000084 	add	x4, x4, #0x0
- 1c4:	91000021 	add	x1, x1, #0x0
- 1c8:	52800863 	mov	w3, #0x43                  	// #67
- 1cc:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
- 1d0:	91000000 	add	x0, x0, #0x0
- 1d4:	94000000 	bl	0 <printk>
- 1d8:	94000000 	bl	0 <clean_reboot>
- 1dc:	17ffffcd 	b	110 <kmalloc_aligned+0x38>
- 1e0:	97ffff88 	bl	0 <kmalloc_init.part.0>
- 1e4:	7100227f 	cmp	w19, #0x8
- 1e8:	54fff8e8 	b.hi	104 <kmalloc_aligned+0x2c>  // b.pmore
- 1ec:	2a1503e0 	mov	w0, w21
- 1f0:	f94013f5 	ldr	x21, [sp, #32]
- 1f4:	a94153f3 	ldp	x19, x20, [sp, #16]
- 1f8:	a8c37bfd 	ldp	x29, x30, [sp], #48
- 1fc:	14000000 	b	48 <kmalloc>
+  e0:	f90013f5 	str	x21, [sp, #32]
+  e4:	90000015 	adrp	x21, 0 <kmalloc_init.part.0>
+  e8:	a90153f3 	stp	x19, x20, [sp, #16]
+  ec:	2a0003f3 	mov	w19, w0
+  f0:	b94002a0 	ldr	w0, [x21]
+  f4:	2a0103f4 	mov	w20, w1
+  f8:	340009c0 	cbz	w0, 230 <kmalloc_aligned+0x158>
+  fc:	7100229f 	cmp	w20, #0x8
+ 100:	540009e9 	b.ls	23c <kmalloc_aligned+0x164>  // b.plast
+ 104:	f2400a9f 	tst	x20, #0x7
+ 108:	54000781 	b.ne	1f8 <kmalloc_aligned+0x120>  // b.any
+ 10c:	910002b5 	add	x21, x21, #0x0
+ 110:	51000660 	sub	w0, w19, #0x1
+ 114:	51000681 	sub	w1, w20, #0x1
+ 118:	4b1403f3 	neg	w19, w20
+ 11c:	0b140000 	add	w0, w0, w20
+ 120:	f94006a2 	ldr	x2, [x21, #8]
+ 124:	0a130000 	and	w0, w0, w19
+ 128:	8b010041 	add	x1, x2, x1
+ 12c:	0a010273 	and	w19, w19, w1
+ 130:	8b000261 	add	x1, x19, x0
+ 134:	f90006a1 	str	x1, [x21, #8]
+ 138:	cb130021 	sub	x1, x1, x19
+ 13c:	eb00003f 	cmp	x1, x0
+ 140:	54000141 	b.ne	168 <kmalloc_aligned+0x90>  // b.any
+ 144:	2a1403e0 	mov	w0, w20
+ 148:	d1000400 	sub	x0, x0, #0x1
+ 14c:	ea13001f 	tst	x0, x19
+ 150:	540002e1 	b.ne	1ac <kmalloc_aligned+0xd4>  // b.any
+ 154:	aa1303e0 	mov	x0, x19
+ 158:	f94013f5 	ldr	x21, [sp, #32]
+ 15c:	a94153f3 	ldp	x19, x20, [sp, #16]
+ 160:	a8c37bfd 	ldp	x29, x30, [sp], #48
+ 164:	d65f03c0 	ret
+ 168:	94000000 	bl	0 <rpi_reset_putc>
+ 16c:	90000002 	adrp	x2, 0 <kmalloc_init.part.0>
+ 170:	91000042 	add	x2, x2, #0x0
+ 174:	91002042 	add	x2, x2, #0x8
+ 178:	90000004 	adrp	x4, 0 <kmalloc_init.part.0>
+ 17c:	90000001 	adrp	x1, 0 <kmalloc_init.part.0>
+ 180:	91000084 	add	x4, x4, #0x0
+ 184:	91000021 	add	x1, x1, #0x0
+ 188:	52800963 	mov	w3, #0x4b                  	// #75
+ 18c:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
+ 190:	91000000 	add	x0, x0, #0x0
+ 194:	94000000 	bl	0 <printk>
+ 198:	94000000 	bl	0 <clean_reboot>
+ 19c:	2a1403e0 	mov	w0, w20
+ 1a0:	d1000400 	sub	x0, x0, #0x1
+ 1a4:	ea13001f 	tst	x0, x19
+ 1a8:	54fffd60 	b.eq	154 <kmalloc_aligned+0x7c>  // b.none
+ 1ac:	94000000 	bl	0 <rpi_reset_putc>
+ 1b0:	90000002 	adrp	x2, 0 <kmalloc_init.part.0>
+ 1b4:	91000042 	add	x2, x2, #0x0
+ 1b8:	2a1403e5 	mov	w5, w20
+ 1bc:	91002042 	add	x2, x2, #0x8
+ 1c0:	90000004 	adrp	x4, 0 <kmalloc_init.part.0>
+ 1c4:	90000001 	adrp	x1, 0 <kmalloc_init.part.0>
+ 1c8:	91000084 	add	x4, x4, #0x0
+ 1cc:	91000021 	add	x1, x1, #0x0
+ 1d0:	52800983 	mov	w3, #0x4c                  	// #76
+ 1d4:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
+ 1d8:	91000000 	add	x0, x0, #0x0
+ 1dc:	94000000 	bl	0 <printk>
+ 1e0:	94000000 	bl	0 <clean_reboot>
+ 1e4:	f94013f5 	ldr	x21, [sp, #32]
+ 1e8:	aa1303e0 	mov	x0, x19
+ 1ec:	a94153f3 	ldp	x19, x20, [sp, #16]
+ 1f0:	a8c37bfd 	ldp	x29, x30, [sp], #48
+ 1f4:	d65f03c0 	ret
+ 1f8:	94000000 	bl	0 <rpi_reset_putc>
+ 1fc:	90000002 	adrp	x2, 0 <kmalloc_init.part.0>
+ 200:	91000042 	add	x2, x2, #0x0
+ 204:	91002042 	add	x2, x2, #0x8
+ 208:	90000004 	adrp	x4, 0 <kmalloc_init.part.0>
+ 20c:	90000001 	adrp	x1, 0 <kmalloc_init.part.0>
+ 210:	91000084 	add	x4, x4, #0x0
+ 214:	91000021 	add	x1, x1, #0x0
+ 218:	52800883 	mov	w3, #0x44                  	// #68
+ 21c:	90000000 	adrp	x0, 0 <kmalloc_init.part.0>
+ 220:	91000000 	add	x0, x0, #0x0
+ 224:	94000000 	bl	0 <printk>
+ 228:	94000000 	bl	0 <clean_reboot>
+ 22c:	17ffffb8 	b	10c <kmalloc_aligned+0x34>
+ 230:	97ffff74 	bl	0 <kmalloc_init.part.0>
+ 234:	7100229f 	cmp	w20, #0x8
+ 238:	54fff668 	b.hi	104 <kmalloc_aligned+0x2c>  // b.pmore
+ 23c:	2a1303e0 	mov	w0, w19
+ 240:	f94013f5 	ldr	x21, [sp, #32]
+ 244:	a94153f3 	ldp	x19, x20, [sp, #16]
+ 248:	a8c37bfd 	ldp	x29, x30, [sp], #48
+ 24c:	14000000 	b	48 <kmalloc>
 
-0000000000000200 <kfree_all>:
- 200:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
- 204:	910003fd 	mov	x29, sp
- 208:	f9000bf3 	str	x19, [sp, #16]
- 20c:	90000013 	adrp	x19, 0 <kmalloc_init.part.0>
- 210:	b9400260 	ldr	w0, [x19]
- 214:	35000040 	cbnz	w0, 21c <kfree_all+0x1c>
- 218:	97ffff7a 	bl	0 <kmalloc_init.part.0>
- 21c:	91000273 	add	x19, x19, #0x0
- 220:	90000000 	adrp	x0, 0 <__heap_start__>
- 224:	91000000 	add	x0, x0, #0x0
- 228:	f9000660 	str	x0, [x19, #8]
- 22c:	f9400bf3 	ldr	x19, [sp, #16]
- 230:	a8c27bfd 	ldp	x29, x30, [sp], #32
- 234:	d65f03c0 	ret
+0000000000000250 <kfree_all>:
+ 250:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+ 254:	910003fd 	mov	x29, sp
+ 258:	f9000bf3 	str	x19, [sp, #16]
+ 25c:	90000013 	adrp	x19, 0 <kmalloc_init.part.0>
+ 260:	b9400260 	ldr	w0, [x19]
+ 264:	35000040 	cbnz	w0, 26c <kfree_all+0x1c>
+ 268:	97ffff66 	bl	0 <kmalloc_init.part.0>
+ 26c:	91000273 	add	x19, x19, #0x0
+ 270:	90000000 	adrp	x0, 0 <__heap_start__>
+ 274:	91000000 	add	x0, x0, #0x0
+ 278:	f9000660 	str	x0, [x19, #8]
+ 27c:	f9400bf3 	ldr	x19, [sp, #16]
+ 280:	a8c27bfd 	ldp	x29, x30, [sp], #32
+ 284:	d65f03c0 	ret
 
-0000000000000238 <kmalloc_heap_ptr>:
- 238:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
- 23c:	910003fd 	mov	x29, sp
- 240:	f9000bf3 	str	x19, [sp, #16]
- 244:	90000013 	adrp	x19, 0 <kmalloc_init.part.0>
- 248:	b9400260 	ldr	w0, [x19]
- 24c:	35000040 	cbnz	w0, 254 <kmalloc_heap_ptr+0x1c>
- 250:	97ffff6c 	bl	0 <kmalloc_init.part.0>
- 254:	91000273 	add	x19, x19, #0x0
- 258:	f9400660 	ldr	x0, [x19, #8]
- 25c:	f9400bf3 	ldr	x19, [sp, #16]
- 260:	a8c27bfd 	ldp	x29, x30, [sp], #32
- 264:	d65f03c0 	ret
+0000000000000288 <kmalloc_heap_ptr>:
+ 288:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+ 28c:	910003fd 	mov	x29, sp
+ 290:	f9000bf3 	str	x19, [sp, #16]
+ 294:	90000013 	adrp	x19, 0 <kmalloc_init.part.0>
+ 298:	b9400260 	ldr	w0, [x19]
+ 29c:	35000040 	cbnz	w0, 2a4 <kmalloc_heap_ptr+0x1c>
+ 2a0:	97ffff58 	bl	0 <kmalloc_init.part.0>
+ 2a4:	91000273 	add	x19, x19, #0x0
+ 2a8:	f9400660 	ldr	x0, [x19, #8]
+ 2ac:	f9400bf3 	ldr	x19, [sp, #16]
+ 2b0:	a8c27bfd 	ldp	x29, x30, [sp], #32
+ 2b4:	d65f03c0 	ret
 
 Disassembly of section .bss:
 
@@ -878,32 +898,32 @@ Disassembly of section .rodata.str1.8:
    c:	65680a70 	.word	0x65680a70
   10:	735f7061 	.word	0x735f7061
   14:	74726174 	.word	0x74726174
-  18:	7525203a 	.word	0x7525203a
+  18:	7025203a 	.word	0x7025203a
   1c:	202d2d20 	.word	0x202d2d20
   20:	70616568 	.word	0x70616568
   24:	7274705f 	.word	0x7274705f
   28:	7025203a 	.word	0x7025203a
-  2c:	00000000 	.word	0x00000000
+  2c:	0000000a 	.word	0x0000000a
   30:	28282828 	.word	0x28282828
   34:	746e6975 	.word	0x746e6975
-  38:	745f3436 	.word	0x745f3436
-  3c:	77656e29 	.word	0x77656e29
-  40:	6165685f 	.word	0x6165685f
-  44:	74705f70 	.word	0x74705f70
-  48:	26202972 	.word	0x26202972
-  4c:	74282820 	.word	0x74282820
-  50:	6f657079 	.word	0x6f657079
-  54:	75282866 	.word	0x75282866
-  58:	36746e69 	.word	0x36746e69
-  5c:	29745f34 	.word	0x29745f34
-  60:	5f77656e 	.word	0x5f77656e
-  64:	70616568 	.word	0x70616568
-  68:	7274705f 	.word	0x7274705f
-  6c:	38282929 	.word	0x38282929
-  70:	202d2029 	.word	0x202d2029
-  74:	20292931 	.word	0x20292931
-  78:	30203d3d 	.word	0x30203d3d
-  7c:	00000029 	.word	0x00000029
+  38:	5f727470 	.word	0x5f727470
+  3c:	656e2974 	.word	0x656e2974
+  40:	65685f77 	.word	0x65685f77
+  44:	705f7061 	.word	0x705f7061
+  48:	20297274 	.word	0x20297274
+  4c:	28282026 	.word	0x28282026
+  50:	65707974 	.word	0x65707974
+  54:	2828666f 	.word	0x2828666f
+  58:	746e6975 	.word	0x746e6975
+  5c:	5f727470 	.word	0x5f727470
+  60:	656e2974 	.word	0x656e2974
+  64:	65685f77 	.word	0x65685f77
+  68:	705f7061 	.word	0x705f7061
+  6c:	29297274 	.word	0x29297274
+  70:	20293828 	.word	0x20293828
+  74:	2931202d 	.word	0x2931202d
+  78:	3d3d2029 	.word	0x3d3d2029
+  7c:	00293020 	.word	0x00293020
   80:	6c616d6b 	.word	0x6c616d6b
   84:	2e636f6c 	.word	0x2e636f6c
   88:	00000063 	.word	0x00000063
@@ -915,14 +935,14 @@ Disassembly of section .rodata.str1.8:
   a0:	534c4146 	.word	0x534c4146
   a4:	253c2845 	.word	0x253c2845
   a8:	3a293e73 	.word	0x3a293e73
-  ac:	696c6120 	.word	0x696c6120
-  b0:	656d6e67 	.word	0x656d6e67
-  b4:	6e20746e 	.word	0x6e20746e
-  b8:	6d20746f 	.word	0x6d20746f
-  bc:	69746c75 	.word	0x69746c75
-  c0:	20656c70 	.word	0x20656c70
-  c4:	3820666f 	.word	0x3820666f
-  c8:	00000a21 	.word	0x00000a21
+  ac:	6c612220 	.word	0x6c612220
+  b0:	6d6e6769 	.word	0x6d6e6769
+  b4:	20746e65 	.word	0x20746e65
+  b8:	20746f6e 	.word	0x20746f6e
+  bc:	746c756d 	.word	0x746c756d
+  c0:	656c7069 	.word	0x656c7069
+  c4:	20666f20 	.word	0x20666f20
+  c8:	0a222138 	.word	0x0a222138
   cc:	00000000 	.word	0x00000000
   d0:	67696c61 	.word	0x67696c61
   d4:	6e656d6e 	.word	0x6e656d6e
@@ -937,55 +957,77 @@ Disassembly of section .rodata.str1.8:
   f8:	534c4146 	.word	0x534c4146
   fc:	253c2845 	.word	0x253c2845
  100:	3a293e73 	.word	0x3a293e73
- 104:	69657720 	.word	0x69657720
- 108:	61206472 	.word	0x61206472
- 10c:	6e67696c 	.word	0x6e67696c
- 110:	746e656d 	.word	0x746e656d
- 114:	6f6e203a 	.word	0x6f6e203a
- 118:	20612074 	.word	0x20612074
- 11c:	746c756d 	.word	0x746c756d
- 120:	656c7069 	.word	0x656c7069
- 124:	20666f20 	.word	0x20666f20
- 128:	000a2138 	.word	0x000a2138
- 12c:	00000000 	.word	0x00000000
- 130:	28282828 	.word	0x28282828
- 134:	746e6975 	.word	0x746e6975
- 138:	745f3436 	.word	0x745f3436
- 13c:	77656e29 	.word	0x77656e29
- 140:	6165685f 	.word	0x6165685f
- 144:	74705f70 	.word	0x74705f70
- 148:	26202972 	.word	0x26202972
- 14c:	74282820 	.word	0x74282820
- 150:	6f657079 	.word	0x6f657079
- 154:	75282866 	.word	0x75282866
- 158:	36746e69 	.word	0x36746e69
- 15c:	29745f34 	.word	0x29745f34
- 160:	5f77656e 	.word	0x5f77656e
- 164:	70616568 	.word	0x70616568
- 168:	7274705f 	.word	0x7274705f
- 16c:	61282929 	.word	0x61282929
- 170:	6e67696c 	.word	0x6e67696c
- 174:	746e656d 	.word	0x746e656d
- 178:	202d2029 	.word	0x202d2029
- 17c:	20292931 	.word	0x20292931
- 180:	30203d3d 	.word	0x30203d3d
- 184:	00000029 	.word	0x00000029
- 188:	4f525245 	.word	0x4f525245
- 18c:	73253a52 	.word	0x73253a52
- 190:	3a73253a 	.word	0x3a73253a
- 194:	203a6425 	.word	0x203a6425
- 198:	534c4146 	.word	0x534c4146
- 19c:	253c2845 	.word	0x253c2845
- 1a0:	3a293e73 	.word	0x3a293e73
- 1a4:	6c612220 	.word	0x6c612220
- 1a8:	6d6e6769 	.word	0x6d6e6769
- 1ac:	20746e65 	.word	0x20746e65
- 1b0:	20746f6e 	.word	0x20746f6e
- 1b4:	746c756d 	.word	0x746c756d
- 1b8:	656c7069 	.word	0x656c7069
- 1bc:	20666f20 	.word	0x20666f20
- 1c0:	22216425 	.word	0x22216425
- 1c4:	Address 0x00000000000001c4 is out of bounds.
+ 104:	65772220 	.word	0x65772220
+ 108:	20647269 	.word	0x20647269
+ 10c:	67696c61 	.word	0x67696c61
+ 110:	6e656d6e 	.word	0x6e656d6e
+ 114:	6e203a74 	.word	0x6e203a74
+ 118:	6120746f 	.word	0x6120746f
+ 11c:	6c756d20 	.word	0x6c756d20
+ 120:	6c706974 	.word	0x6c706974
+ 124:	666f2065 	.word	0x666f2065
+ 128:	22213820 	.word	0x22213820
+ 12c:	0000000a 	.word	0x0000000a
+ 130:	70616568 	.word	0x70616568
+ 134:	7274705f 	.word	0x7274705f
+ 138:	6e202d20 	.word	0x6e202d20
+ 13c:	685f7765 	.word	0x685f7765
+ 140:	5f706165 	.word	0x5f706165
+ 144:	20727470 	.word	0x20727470
+ 148:	6e203d3d 	.word	0x6e203d3d
+ 14c:	65747962 	.word	0x65747962
+ 150:	00000073 	.word	0x00000073
+ 154:	00000000 	.word	0x00000000
+ 158:	4f525245 	.word	0x4f525245
+ 15c:	73253a52 	.word	0x73253a52
+ 160:	3a73253a 	.word	0x3a73253a
+ 164:	203a6425 	.word	0x203a6425
+ 168:	534c4146 	.word	0x534c4146
+ 16c:	253c2845 	.word	0x253c2845
+ 170:	3a293e73 	.word	0x3a293e73
+ 174:	6c622220 	.word	0x6c622220
+ 178:	206b636f 	.word	0x206b636f
+ 17c:	6e203d21 	.word	0x6e203d21
+ 180:	65747962 	.word	0x65747962
+ 184:	000a2273 	.word	0x000a2273
+ 188:	28282828 	.word	0x28282828
+ 18c:	746e6975 	.word	0x746e6975
+ 190:	5f727470 	.word	0x5f727470
+ 194:	656e2974 	.word	0x656e2974
+ 198:	65685f77 	.word	0x65685f77
+ 19c:	705f7061 	.word	0x705f7061
+ 1a0:	20297274 	.word	0x20297274
+ 1a4:	28282026 	.word	0x28282026
+ 1a8:	65707974 	.word	0x65707974
+ 1ac:	2828666f 	.word	0x2828666f
+ 1b0:	746e6975 	.word	0x746e6975
+ 1b4:	5f727470 	.word	0x5f727470
+ 1b8:	656e2974 	.word	0x656e2974
+ 1bc:	65685f77 	.word	0x65685f77
+ 1c0:	705f7061 	.word	0x705f7061
+ 1c4:	29297274 	.word	0x29297274
+ 1c8:	696c6128 	.word	0x696c6128
+ 1cc:	656d6e67 	.word	0x656d6e67
+ 1d0:	2029746e 	.word	0x2029746e
+ 1d4:	2931202d 	.word	0x2931202d
+ 1d8:	3d3d2029 	.word	0x3d3d2029
+ 1dc:	00293020 	.word	0x00293020
+ 1e0:	4f525245 	.word	0x4f525245
+ 1e4:	73253a52 	.word	0x73253a52
+ 1e8:	3a73253a 	.word	0x3a73253a
+ 1ec:	203a6425 	.word	0x203a6425
+ 1f0:	534c4146 	.word	0x534c4146
+ 1f4:	253c2845 	.word	0x253c2845
+ 1f8:	3a293e73 	.word	0x3a293e73
+ 1fc:	6c612220 	.word	0x6c612220
+ 200:	6d6e6769 	.word	0x6d6e6769
+ 204:	20746e65 	.word	0x20746e65
+ 208:	20746f6e 	.word	0x20746f6e
+ 20c:	746c756d 	.word	0x746c756d
+ 210:	656c7069 	.word	0x656c7069
+ 214:	20666f20 	.word	0x20666f20
+ 218:	22216425 	.word	0x22216425
+ 21c:	Address 0x000000000000021c is out of bounds.
 
 
 Disassembly of section .comment:
@@ -996,9 +1038,9 @@ Disassembly of section .comment:
    8:	72616e69 	.inst	0x72616e69 ; undefined
    c:	4347206f 	.inst	0x4347206f ; undefined
   10:	2e372043 	usubl	v3.8h, v2.8b, v23.8b
-  14:	30322d32 	adr	x18, 645b9 <kmalloc_heap_ptr+0x64381>
+  14:	30322d32 	adr	x18, 645b9 <kmalloc_heap_ptr+0x64331>
   18:	312e3731 	adds	w17, w25, #0xb8d
-  1c:	37202931 	tbnz	w17, #4, 540 <kmalloc_heap_ptr+0x308>
+  1c:	37202931 	tbnz	w17, #4, 540 <kmalloc_heap_ptr+0x2b8>
   20:	312e322e 	adds	w14, w17, #0xb8c
   24:	31303220 	adds	w0, w17, #0xc0c
   28:	31303137 	adds	w23, w9, #0xc0c
