@@ -10,6 +10,7 @@
 */
 #include "assert.h"
 #include "rpi.h"
+#include <stdint.h>
 
 
 #if 0
@@ -59,13 +60,13 @@ static char* reverse(char *dst, int n, char *p, char *start) {
 	return s;
 }
 
-static char* emit(unsigned base, char *dst, int n, int val, int width, int signed_p) {
+static char* emit(unsigned base, char *dst, int n, uint64_t val, int width, int signed_p) {
 	// XXX: constrain width to be >= bit size: can change this.
 	if(width > n)
 		width = n - 1;
 
 	char buf[64], *p = buf; 
-	unsigned u = val;
+	uint64_t u = val;
 
 	switch(base) { 
 		case 10: 
@@ -134,7 +135,7 @@ int va_printk(char *buf, int n, const char *fmt, va_list args) {
 				width = width*10 + *fmt - '0';
 				fmt++;
 			}
-			assert(width < 32);
+			assert(width < 64);
 			
 			switch(*fmt) {
 			case 'f':
@@ -157,14 +158,14 @@ int va_printk(char *buf, int n, const char *fmt, va_list args) {
 				s = emit(10, num, 128, va_arg(args, int), width, 1);
 				break;
 			case 'u':
-				s = emit(10, num, 128, va_arg(args, unsigned), width, 0);
+				s = emit(10, num, 128, va_arg(args, uint64_t), width, 0);
 				break;
 			case 'p':
 			case 'x':
-				s = emit(16, num, 128, va_arg(args, unsigned), width, 0);
+				s = emit(16, num, 128, va_arg(args, uint64_t), width, 0);
 				break;
 			case 'b':
-				s = emit(2, num, 128, va_arg(args, unsigned), width, 0);
+				s = emit(2, num, 128, va_arg(args, uint64_t), width, 0);
 				break;
 			case 's':
 				s = va_arg(args, char *);
