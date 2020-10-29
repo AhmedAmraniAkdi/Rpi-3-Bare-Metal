@@ -1,6 +1,7 @@
 #ifndef __RPI_H__
 #define __RPI_H__
 
+#include <stdint.h>
 /***********HELPERS************/
 
 // https://en.wikipedia.org/wiki/Calling_convention#ARM_(A64)
@@ -11,6 +12,9 @@ extern unsigned GET8(unsigned);
 extern void CYCLE_DELAY(unsigned);
 extern void DUMMY();
 extern void BRANCHTO(unsigned);
+
+extern uint64_t GETPC(void);
+extern uint64_t GETEL(void);
 
 extern void DSB(void);
 extern void DMB(void);

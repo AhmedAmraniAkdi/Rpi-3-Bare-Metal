@@ -26,6 +26,12 @@ GETPC:
     mov x0,x30
     ret
 
+.globl GETEL
+get_el:
+	mrs x0, CurrentEL
+	lsr x0, x0, #2
+	ret
+
 .globl BRANCHTO
 BRANCHTO:
     mov w30,w0
