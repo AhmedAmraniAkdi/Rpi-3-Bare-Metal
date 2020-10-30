@@ -52,21 +52,21 @@ void register_irq_handler(irq_number_t irq_num, interrupt_handler_f handler, int
     if (IRQ_IS_BASIC(irq_num)) {
         irq_pos = irq_num - 64;
         handlers[irq_num] = handler;
-		clearers[irq_num] = clearer;
+	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_BASIC_ENABLE);
         PUT32(IRQ_BASIC_ENABLE, r | (1 << irq_pos));
     }
     else if (IRQ_IS_GPU2(irq_num)) {
         irq_pos = irq_num - 32;
         handlers[irq_num] = handler;
-		clearers[irq_num] = clearer;
+	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_GPU_ENABLE2);
         PUT32(IRQ_GPU_ENABLE2, r | (1 << irq_pos));
     }
     else if (IRQ_IS_GPU1(irq_num)) {
         irq_pos = irq_num;
         handlers[irq_num] = handler;
-		clearers[irq_num] = clearer;
+	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_GPU_ENABLE1);
         PUT32(IRQ_GPU_ENABLE1, r | (1 << irq_pos));
     }
@@ -110,8 +110,8 @@ void irq_handler(void) {
 	for (int j = 0; j < NUM_IRQS; j++) {
         if (IRQ_IS_PENDING(j)  && (handlers[j] != 0)) {
             DSB();
-			clearers[j]();
-			handlers[j]();
+		    clearers[j]();
+		    handlers[j]();
             DSB();
         }
     }

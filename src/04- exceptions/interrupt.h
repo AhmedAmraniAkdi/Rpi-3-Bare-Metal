@@ -37,6 +37,10 @@ typedef enum {
 typedef void (*interrupt_handler_f)(void);
 typedef void (*interrupt_clearer_f)(void);
 
+extern void disable_irq(void);
+extern void enable_irq(void);
+extern void irq_vector_init(void);
+
 void interrupt_init(void);
 void register_irq_handler(irq_number_t irq_num, interrupt_handler_f handler, interrupt_clearer_f clearer);
 void unregister_irq_handler(irq_number_t irq_num);
