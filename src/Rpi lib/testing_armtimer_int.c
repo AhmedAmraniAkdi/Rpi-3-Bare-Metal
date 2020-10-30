@@ -12,7 +12,7 @@ void arm_timer_handler(){
     printk("int");
     cnt++;
 
-    clk = timer_get_usec();
+    clk = timer_get_time();
     period_sum += clk - last_clk;
     last_clk = clk;
 }

@@ -11,8 +11,9 @@ all : libpi kernel8.img
 libpi:
 	make -C $(LIBPI)
 
-start.o : start.s
-	aarch64-none-elf-as start.s -o start.o
+start.o : start.S
+	#aarch64-none-elf-as start.s -o start.o
+	$(CC) -c $< -o $@
 
 kernel8.img : mmap start.o $(OBJS) $(LIBPI)/libpi.a
 	aarch64-none-elf-ld start.o $(OBJS) $(LIBPI)/libpi.a -T mmap -o test.elf

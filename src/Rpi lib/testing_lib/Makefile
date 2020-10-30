@@ -1,6 +1,7 @@
 SRC = $(wildcard *.c)
 ASM_SRC = $(wildcard *.s)
-LIB_OBJS =  $(patsubst %.c, %.o, $(SRC)) $(patsubst %.s, %.o, $(ASM_SRC))
+ASM_SRC_P = $(wildcard *.S)
+LIB_OBJS =  $(patsubst %.c, %.o, $(SRC)) $(patsubst %.s, %.o, $(ASM_SRC)) $(patsubst %.S, %.o, $(ASM_SRC_P))
 
 ARM = aarch64-none-elf
 CC = $(ARM)-gcc
@@ -13,6 +14,9 @@ CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -O2 -std=gnu99
 TARGET = libpi.a
 
 all : $(TARGET) 
+
+%.o:%.S
+	$(CC) $(ASFLAGS) -c $< -o $@
 
 %.o:%.s
 	$(AS) $(ASFLAGS) $< -o $@ 

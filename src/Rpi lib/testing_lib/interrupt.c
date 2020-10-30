@@ -108,7 +108,7 @@ void unregister_irq_handler(irq_number_t irq_num){
 // loop : that way we eat multiple ints if there are demanded
 void irq_handler(void) {
 	for (int j = 0; j < NUM_IRQS; j++) {
-        if (IRQ_IS_PENDING(j)  && (handlers[j] != 0)) {
+        if (is_pending(j)  && (handlers[j] != 0)) {
             DSB();
 		    clearers[j]();
 		    handlers[j]();
