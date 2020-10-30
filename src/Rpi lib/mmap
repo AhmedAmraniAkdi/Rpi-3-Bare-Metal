@@ -1,19 +1,11 @@
-/* https://interrupt.memfault.com/blog/how-to-write-linker-scripts-for-firmware */
-/* https://github.com/dddrrreee/cs140e-20win/blob/master/libpi/memmap */
-
 SECTIONS
 {
-    .text 0x80000 :  { KEEP(*(.text.boot))  *(.text*) }
-    .data : { *(.data*) } 
-    .rodata : { *(.rodata*) }
-    .bss : {
-        __bss_start__ = .;
-        *(.bss*)
-        *(COMMON)
-        . = ALIGN(8);
-        __bss_end__ = .;
-        . = ALIGN(8);
-        __heap_start__ = .;
-    }
+	.text.boot 0x80000 : { *(.text.boot) }
+	.text : { *(.text) }
+	.rodata : { *(.rodata) }
+	.data : { *(.data) }
+	. = ALIGN(0x8);
+	bss_begin = .;
+	.bss : { *(.bss*) } 
+	bss_end = .;
 }
-
