@@ -1,4 +1,5 @@
 #include "testing_lib/rpi.h"
+#include "testing_lib/assert.h"
 #include "testing_lib/interrupt.h"
 #include "testing_lib/armtimer.h"
 #include "testing_lib/timer.h"
@@ -7,9 +8,8 @@
 static volatile unsigned cnt, period_sum, last_clk, clk;
 
 void arm_timer_handler(){
-    PUT32(arm_timer_IRQClear, 1);
-    printk("int");
     cnt++;
+    printk("%d\n", cnt);
 
     clk = timer_get_time();
     period_sum += clk - last_clk;
@@ -17,29 +17,30 @@ void arm_timer_handler(){
 }
 
 void arm_timer_clearer(){
-    PUT32(arm_timer_Control, 0x3E0020);
-    printk("disabling int");
+    //PUT32(arm_timer_Control, 0x3E0020);
+    PUT32(arm_timer_IRQClear, 1);
+    printk("clearing int\n");
 }
 
 
 void notmain(){
     uart_init();
 
-    uart_putc(0x30);
-    printk("initializing interrupts");
+    printk("initializing interrupts\n");
     interrupt_init();
-    uart_putc(0x31);
-    /*
 
-    printk("initializing arm timer");
-    timer_interrupt_init(0x1000);
-
+    printk("registering irq_handler\n");
     register_irq_handler(ARM_TIMER, arm_timer_handler, arm_timer_clearer);
 
-    unsigned N = 25;
-    unsigned iter = 0;
+    printk("initializing arm timer\n");
+    timer_interrupt_init(0x1000);
+
     unsigned time1 = timer_get_time();
-    while(cnt < N){iter++;};
+    unsigned iter = 0;
+    unsigned N = 25;
+    while(cnt < N){
+        iter++;
+    };
     unsigned tot        = timer_get_time() - time1,
              tot_sec    = tot / (1000*1000),
              tot_ms     = (tot / 1000) % 1000,
@@ -56,7 +57,7 @@ void notmain(){
 
     printk("unregistering handler");
 
-    unregister_irq_handler(ARM_TIMER);*/
+    unregister_irq_handler(ARM_TIMER);
 
     while(1){};
 }   

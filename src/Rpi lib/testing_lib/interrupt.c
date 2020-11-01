@@ -73,6 +73,8 @@ void register_irq_handler(irq_number_t irq_num, interrupt_handler_f handler, int
     else {
         panic("ERROR: CANNOT REGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
+    demand(handlers[irq_num] != 0, "handler wasnt set correctly");
+    demand(clearers[irq_num] != 0, "clearer wasnt set correctly");
     DSB();
 }
 void unregister_irq_handler(irq_number_t irq_num){
@@ -101,6 +103,8 @@ void unregister_irq_handler(irq_number_t irq_num){
     else {
         panic("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
+    demand(handlers[irq_num] == 0, "handler wasnt cleared correctly");
+    demand(clearers[irq_num] == 0, "clearer wasnt cleared correctly");
     DSB();
 }
 

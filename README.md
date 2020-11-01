@@ -19,3 +19,5 @@ https://github.com/bztsrc/raspi3-tutorial
 https://github.com/LdB-ECM/Raspberry-Pi/blob/master/10_virtualmemory/rpi-SmartStart.c  
 
 http://pages.cs.wisc.edu/~remzi/OSTEP/#book-chapters
+
+https://github.com/BrianSidebotham/arm-tutorial-rpi

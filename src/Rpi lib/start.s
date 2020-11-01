@@ -53,6 +53,7 @@ _start:
     ldr     x2, =vectors
     msr     vbar_el1, x2
     // set up neon and fpu for EL1
+    //i'm proud of this 3 lines of code
     mov     x2, #0x0000
     movk    x2, #0x0030, lsl #16 // FPEN disables trapping to EL1.
     msr     cpacr_el1, x2
