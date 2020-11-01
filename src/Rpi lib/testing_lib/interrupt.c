@@ -36,7 +36,7 @@ void interrupt_init(void){
     PUT32(IRQ_BASIC_DISABLE, 0xFFFFFFFF);
     PUT32(IRQ_GPU_DISABLE1, 0xFFFFFFFF);
     PUT32(IRQ_GPU_DISABLE2, 0xFFFFFFFF);
-    irq_vector_init();
+    //irq_vector_init();
     enable_irq();
     DSB();
 }

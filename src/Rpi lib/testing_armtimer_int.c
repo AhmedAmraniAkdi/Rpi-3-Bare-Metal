@@ -1,5 +1,4 @@
 #include "testing_lib/rpi.h"
-#include "testing_lib/assert.h"
 #include "testing_lib/interrupt.h"
 #include "testing_lib/armtimer.h"
 #include "testing_lib/timer.h"
@@ -26,8 +25,11 @@ void arm_timer_clearer(){
 void notmain(){
     uart_init();
 
+    uart_putc(0x30);
     printk("initializing interrupts");
     interrupt_init();
+    uart_putc(0x31);
+    /*
 
     printk("initializing arm timer");
     timer_interrupt_init(0x1000);
@@ -54,7 +56,7 @@ void notmain(){
 
     printk("unregistering handler");
 
-    unregister_irq_handler(ARM_TIMER);
+    unregister_irq_handler(ARM_TIMER);*/
 
     while(1){};
 }   

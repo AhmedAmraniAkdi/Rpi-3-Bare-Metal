@@ -3,7 +3,8 @@ CC= aarch64-none-elf-gcc
 LIBPI = testing_lib
 CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles -ffreestanding 
 
-SRC = testing_armtimer_int.c 
+#SRC = testing_armtimer_int.c 
+SRC = test-kmalloc.c
 OBJS = $(SRC:.c=.o)
 
 all : libpi kernel8.img 

@@ -1,5 +1,4 @@
-// https://github.com/s-matyukevich/raspberry-pi-os
-// hangs the processors but the first one, configures to EL1 
+.section ".text.boot"
 
 .global _start
 
@@ -51,8 +50,12 @@ _start:
     movk    x2, #0x30d0, lsl #16
     msr     sctlr_el1, x2
     // set up exception handlers done in irq.s
-    // ldr     x2, =vectors
-    // msr     vbar_el1, x2
+    ldr     x2, =vectors
+    msr     vbar_el1, x2
+    // set up neon and fpu for EL1
+    mov     x2, #0x0000
+    movk    x2, #0x0030, lsl #16 // FPEN disables trapping to EL1.
+    msr     cpacr_el1, x2
     // change execution level to EL1
     mov     x2, #0x3c5 // EL1h
     msr     spsr_el2, x2
@@ -74,4 +77,3 @@ _start:
 4:  bl      notmain
     // for failsafe, halt this core too
     b       1b
-	

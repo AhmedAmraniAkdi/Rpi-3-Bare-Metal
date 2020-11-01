@@ -134,3 +134,4 @@ el1_irq:
 
 .globl err_hang
 err_hang: b err_hang
+

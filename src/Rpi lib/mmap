@@ -19,3 +19,21 @@ SECTIONS
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
+
+/*  this script tells the linker how to layout our pi executable's. 
+SECTIONS
+{
+
+    .text 0x80000 :  { KEEP(*(.text.boot))  *(.text*) }
+    .data : { *(.data*) } 
+    .rodata : { *(.rodata*) }
+    .bss : {
+        __bss_start = .;
+        *(.bss*)
+        *(COMMON)
+        . = ALIGN(8);
+        __bss_end = .;
+        . = ALIGN(8);
+    }
+}
+__bss_size = (__bss_end - __bss_start)>>3;*/
