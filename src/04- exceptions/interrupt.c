@@ -36,7 +36,7 @@ void interrupt_init(void){
     PUT32(IRQ_BASIC_DISABLE, 0xFFFFFFFF);
     PUT32(IRQ_GPU_DISABLE1, 0xFFFFFFFF);
     PUT32(IRQ_GPU_DISABLE2, 0xFFFFFFFF);
-    irq_vector_init();
+    //irq_vector_init();
     enable_irq();
     DSB();
 }
@@ -52,27 +52,29 @@ void register_irq_handler(irq_number_t irq_num, interrupt_handler_f handler, int
     if (IRQ_IS_BASIC(irq_num)) {
         irq_pos = irq_num - 64;
         handlers[irq_num] = handler;
-		clearers[irq_num] = clearer;
+	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_BASIC_ENABLE);
         PUT32(IRQ_BASIC_ENABLE, r | (1 << irq_pos));
     }
     else if (IRQ_IS_GPU2(irq_num)) {
         irq_pos = irq_num - 32;
         handlers[irq_num] = handler;
-		clearers[irq_num] = clearer;
+	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_GPU_ENABLE2);
         PUT32(IRQ_GPU_ENABLE2, r | (1 << irq_pos));
     }
     else if (IRQ_IS_GPU1(irq_num)) {
         irq_pos = irq_num;
         handlers[irq_num] = handler;
-		clearers[irq_num] = clearer;
+	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_GPU_ENABLE1);
         PUT32(IRQ_GPU_ENABLE1, r | (1 << irq_pos));
     }
     else {
         panic("ERROR: CANNOT REGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
+    demand(handlers[irq_num] != 0, "handler wasnt set correctly");
+    demand(clearers[irq_num] != 0, "clearer wasnt set correctly");
     DSB();
 }
 void unregister_irq_handler(irq_number_t irq_num){
@@ -101,6 +103,8 @@ void unregister_irq_handler(irq_number_t irq_num){
     else {
         panic("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
+    demand(handlers[irq_num] == 0, "handler wasnt cleared correctly");
+    demand(clearers[irq_num] == 0, "clearer wasnt cleared correctly");
     DSB();
 }
 
@@ -108,10 +112,10 @@ void unregister_irq_handler(irq_number_t irq_num){
 // loop : that way we eat multiple ints if there are demanded
 void irq_handler(void) {
 	for (int j = 0; j < NUM_IRQS; j++) {
-        if (IRQ_IS_PENDING(j)  && (handlers[j] != 0)) {
+        if (is_pending(j)  && (handlers[j] != 0)) {
             DSB();
-			clearers[j]();
-			handlers[j]();
+		    clearers[j]();
+		    handlers[j]();
             DSB();
         }
     }

@@ -1,6 +1,3 @@
-// won't need an arm_timer_interrupt_init
-// registering a handle for the arm timer will suffice
-
 #ifndef __RPI_ARMTIMER_H__
 #define __RPI_ARMTIMER_H__
 #include <stdint.h>

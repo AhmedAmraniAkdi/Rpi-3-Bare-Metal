@@ -15,7 +15,7 @@ SECTIONS
     }
     . = ALIGN(4096);
     _end = .;
-
+    __heap_start__ = .;
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;

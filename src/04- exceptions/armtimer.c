@@ -3,7 +3,7 @@
 
 void timer_interrupt_init(unsigned ncycles){
 
-    //	 Arm timer interrupt IRQ will be enabled on registration
+    // Arm timer interrupt IRQ will be enabled on registration
 
     /* Setup the system timer interrupt */
     /* Timer frequency = Clk/256 * Load --- so smaller = more frequent. */

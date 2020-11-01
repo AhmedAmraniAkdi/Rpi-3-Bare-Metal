@@ -1,50 +1,80 @@
-// https://github.com/s-matyukevich/raspberry-pi-os
-// hangs the processors but the first one, configures to EL1 
-
-#include "sysregs.h"
-
 .section ".text.boot"
 
-.globl _start
+.global _start
+
 _start:
-	mrs	x0, mpidr_el1		
-	and	x0, x0,#0xFF	// Check processor id
-	cbz	x0, master		// Hang for all non-primary CPU
-	b	proc_hang
+    // read cpu id, stop slave cores
+    mrs     x1, mpidr_el1
+    and     x1, x1, #3
+    cbz     x1, 2f
+    // cpu id > 0, stop
+1:  wfe
+    b       1b
+2:  // cpu id == 0
 
-proc_hang: 
-	b 	proc_hang
+    // set stack before our code
+    ldr     x1, =_start
 
-master:
-	ldr	x0, =SCTLR_VALUE_MMU_DISABLED
-	msr	sctlr_el1, x0		
+    // set up EL1
+    mrs     x0, CurrentEL
+    and     x0, x0, #12 // clear reserved bits
 
-	ldr	x0, =HCR_VALUE
-	msr	hcr_el2, x0
+    // running at EL3?
+    cmp     x0, #12
+    bne     5f
+    // should never be executed, just for completeness
+    mov     x2, #0x5b1
+    msr     scr_el3, x2
+    mov     x2, #0x3c9
+    msr     spsr_el3, x2
+    adr     x2, 5f
+    msr     elr_el3, x2
+    eret
 
-	ldr	x0, =SCR_VALUE
-	msr	scr_el3, x0
+    // running at EL2?
+5:  cmp     x0, #4
+    beq     5f
+    msr     sp_el1, x1
+    // enable CNTP for EL1
+    mrs     x0, cnthctl_el2
+    orr     x0, x0, #3
+    msr     cnthctl_el2, x0
+    msr     cntvoff_el2, xzr
+    // enable AArch64 in EL1
+    mov     x0, #(1 << 31)      // AArch64
+    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
+    msr     hcr_el2, x0
+    mrs     x0, hcr_el2
+    // Setup SCTLR access
+    mov     x2, #0x0800
+    movk    x2, #0x30d0, lsl #16
+    msr     sctlr_el1, x2
+    // set up exception handlers done in irq.s
+    ldr     x2, =vectors
+    msr     vbar_el1, x2
+    // set up neon and fpu for EL1
+    //i'm proud of this 3 lines of code
+    mov     x2, #0x0000
+    movk    x2, #0x0030, lsl #16 // FPEN disables trapping to EL1.
+    msr     cpacr_el1, x2
+    // change execution level to EL1
+    mov     x2, #0x3c5 // EL1h
+    msr     spsr_el2, x2
+    adr     x2, 5f
+    msr     elr_el2, x2
+    eret
 
-	ldr	x0, =SPSR_VALUE
-	msr	spsr_el3, x0
+5:  mov     sp, x1
 
-	adr	x0, el1_entry		
-	msr	elr_el3, x0
+    // clear bss
+    ldr     x1, =__bss_start
+    ldr     w2, =__bss_size
+3:  cbz     w2, 4f
+    str     xzr, [x1], #8
+    sub     w2, w2, #1
+    cbnz    w2, 3b
 
-	eret				
-
-el1_entry:
-	adr	x0, bss_begin
-	adr	x1, bss_end
-	sub	x1, x1, x0
-	bl 	memzero
-
-	mov	sp, #0x40000
-	bl	notmain
-	b 	proc_hang		// should never come here
-
-memzero:
-	str xzr, [x0], #8
-	subs x1, x1, #8
-	b.gt memzero
-	ret
+    // jump to C code, should not return
+4:  bl      notmain
+    // for failsafe, halt this core too
+    b       1b
