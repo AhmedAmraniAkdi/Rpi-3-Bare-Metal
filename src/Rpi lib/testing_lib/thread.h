@@ -4,15 +4,16 @@
 
 //#define THREAD_CPU_CONTEXT			0 		// offset of cpu_context in task_struct 
 
-#define THREAD_SIZE				4096
+#define THREAD_SIZE	4096
+#define NR_TASKS 64 
 
-#define NR_TASKS				64 
-
-#define FIRST_TASK task[0]
+#define INIT_TASK task[0]
 #define LAST_TASK task[NR_TASKS-1]
 
 // will define more
-#define TASK_RUNNING				0
+#define TASK_RUNNING 0
+//#define TASK_WAITING 1
+#define TASK_READY 2
 
 // callee registers, let'see, there are 2 types:
 // caller: if you will use them after the function call, the caller saves them before calling and restores them after calling
@@ -50,21 +51,18 @@ struct task_struct {
 	uint64_t state;	
 	// uint64_t counter; no need for this
 	// uint64_t priority; no priority, simple round robin scheduler
+	// uint8_t type; // type = 0 if never at waiting state, 1 if has to wait for an event
 	uint8_t preempt_count; // 1 if executing critical stuff
+	//uint8_t (*check_waiting)(); // if a task needs a condition to start, this function checks that, if not, this field == 0
 };
 
 void sched_init(void);
-void schedule(void);
-void scheduler_tick(void); //?
+void schedule(void); 
+//void scheduler_tick(void); // i don't think we need access to this functions, like we just set up the threads with fork_task and init and let it go off
 //void preempt_disable(void);
 //void preempt_enable(void);
 //void switch_to(struct task_struct* next);
 //void contex_switch(struct task_struct* prev, struct task_struct* next);
 int fork_task(uint64_t fn, uint64_t arg);
-
-#define INIT_TASK \
-/*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,1, 0 \
-}
 
 #endif
