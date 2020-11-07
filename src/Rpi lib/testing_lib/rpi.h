@@ -41,21 +41,14 @@ void rpi_set_output(int (*putc_fp)(int), int (*puts_fp)(const char *));
 int printk(const char *format, ...);
 
 /*******************************************************************************
- * simple memory allocation: no free, just have to reboot().
+ * simple memory allocation using linked lists
  */
 
-// returns 0-filled memory.
-void *kmalloc(unsigned nbytes) ;
-void *kmalloc_aligned(unsigned nbytes, unsigned alignment);
+void *kmalloc(uint64_t nbytes, uint8_t alignement);
 
-// initialize kmalloc
-void kmalloc_init(void);
+void heap_init(void);
 
-// return pointer to the first free byte.  used for
-// bounds checking.
-void *kmalloc_heap_ptr(void);
-
-void kfree_all(void);
+void kfree(void *ptr);
 
 
 #endif

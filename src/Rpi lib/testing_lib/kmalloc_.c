@@ -20,13 +20,13 @@ typedef struct heap_segment{
     uint32_t segment_size;  
 } heap_segment_t;
 
-void * kmalloc(uint64_t bytes) {
+void * kmalloc(uint64_t bytes, uint8_t alignement) {
     heap_segment_t * curr, *best = NULL;
     int diff, best_diff = 0x7fffffff; // Max signed int
 
-    // Add the header to the number of bytes we need and make the size 8 byte aligned
+    // Add the header to the number of bytes we need and make the size <alignement> byte aligned
     bytes += sizeof(heap_segment_t);
-    bytes = pi_roundup(bytes, 8);
+    bytes = pi_roundup(bytes, alignement);
     
 
     // Find the allocation that is closest in size to this request
