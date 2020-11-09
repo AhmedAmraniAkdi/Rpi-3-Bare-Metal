@@ -12,8 +12,9 @@
 
 // will define more
 #define TASK_RUNNING 0
-//#define TASK_WAITING 1
-#define TASK_READY 2
+#define TASK_WAITING 1
+#define TASK_READY   2
+#define TASK_ZOMBIE  3
 
 // callee registers, let'see, there are 2 types:
 // caller: if you will use them after the function call, the caller saves them before calling and restores them after calling
@@ -48,21 +49,16 @@ struct cpu_context {
 
 struct task_struct {
 	struct cpu_context cpu_context;
-	uint64_t state;	
-	// uint64_t counter; no need for this
-	// uint64_t priority; no priority, simple round robin scheduler
-	// uint8_t type; // type = 0 if never at waiting state, 1 if has to wait for an event
+	uint64_t state;
 	uint8_t preempt_count; // 1 if executing critical stuff
-	//uint8_t (*check_waiting)(); // if a task needs a condition to start, this function checks that, if not, this field == 0
 };
 
-void sched_init(void);
-void schedule(void); 
-//void scheduler_tick(void); // i don't think we need access to this functions, like we just set up the threads with fork_task and init and let it go off
-//void preempt_disable(void);
-//void preempt_enable(void);
-//void switch_to(struct task_struct* next);
-//void contex_switch(struct task_struct* prev, struct task_struct* next);
-int fork_task(uint64_t fn, uint64_t arg);
+
+void schedule(void);
+void scheduler_tick(void);
+void timer_tick_clear(void);
+int  fork_task(struct task_struct *p, void*(fn)(void), void *arg);
+void yield_task(void);
+void join_task(struct task_struct *p, void* ret);
 
 #endif

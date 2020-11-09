@@ -2,7 +2,8 @@
 ret_from_fork:
     bl preempt_enable
     mov x0, x20
-    blr x19         
+    blr x19
+    b exit_task        
 
 // also known as brain surgery
 .globl cpu_switch_to
