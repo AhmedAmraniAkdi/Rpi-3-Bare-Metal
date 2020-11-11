@@ -4,41 +4,16 @@
 #include "thread.h"
 #include "helper_macros.h"
 
-// no need for q? an array is enough, keeping it simple
+
 static struct task_struct *current;
-static struct task_struct *task[NR_TASKS];
+static node* entry;
 static int nr_tasks;
-static int task_id;
 
 extern void ret_from_fork(void);
 extern void context_switch(struct task_struct* prev, struct task_struct* next);
 extern void enable_irq(void);
 extern void disable_irq(void);
 
-// laziness, using an array as a q
-int next_thread_idx(uint8_t task_idx){
-	int nxt = -1;
-
-	if(nr_tasks == 0)
-		return nxt;
-
-	for(int i = task_id + 1; i < nr_tasks; i++){
-		if(task[i]->state == TASK_READY){
-			nxt = i;
-			break;
-		}
-	}
-
-	if(nxt == -1){
-		for(int i = 0; i < task_id + 1; i++){
-			if(task[i]->state == TASK_READY){
-				nxt = i;
-				break;
-			}
-		}
-	}
-	return nxt;
-}
 
 void preempt_disable(void){
 	current->preempt_count++; // why no just 1 / 0 ?
@@ -71,7 +46,8 @@ void fork_task(struct task_struct *p, void*(fn)(void), void *arg, void *ret){
 	p->cpu_context.pc  = (uint64_t)ret_from_fork;
 	p->cpu_context.sp  = (uint64_t) p->stack_start + (uint64_t) THREAD_SIZE;
 	int pid = nr_tasks++;
-	task[pid] = p;	
+	//task[pid] = p;
+	add_circular(entry, p);
 	preempt_enable();
 }
 
@@ -108,21 +84,27 @@ void switch_to(struct task_struct * next)
 // the ppl who came up with all this are geniuses
 void schedule(void){
 
-	if(nr_tasks == 0 && task_id == 0) // if only init task return
+	if(nr_tasks == 0) // if only init task return
 		return;
 
 	preemt_disable();
-	int nxt = next_thread_idx(task_id);
-
-	if(nxt == -1){
+	node* temp = entry;
+	struct task_struct* temp_ = NULL;
+	while(temp->next != entry){
+		temp_ = (struct task_struct*) temp->ptr;
+		if(temp_->state == TASK_READY){
+			break;
+		}
+		temp = temp->next;
+	}
+	if(temp->next == entry){
 		preemt_enable();
 		return;
 	}
 
-	task[task_id]->state = TASK_READY;
-	task_id = nxt;
-	task[task_id]->state = TASK_RUNNING;
-	switch_to(task[task_id]);
+	current->state = TASK_READY;
+	temp_->state = TASK_RUNNING;
+	switch_to(temp_);
 	preemt_enable();
 }
 
@@ -143,7 +125,7 @@ void join_task(struct task_struct *p){
 void exit_task(void){
 	current->state = TASK_ZOMBIE;
 	kfree(current->stack_start);
-	task[task_id] = task[nr_tasks - 1];
+	remove_circular(entry, current);
 	nr_tasks--;
 	schedule();
 }
