@@ -4,9 +4,9 @@
 #include "thread.h"
 #include "helper_macros.h"
 
-// no need for circular q? an array is enough, keeping it simple
+// no need for q? an array is enough, keeping it simple
 static struct task_struct *current;
-static struct task_struct * task[NR_TASKS];
+static struct task_struct *task[NR_TASKS];
 static int nr_tasks;
 static int task_id;
 
@@ -15,7 +15,7 @@ extern void context_switch(struct task_struct* prev, struct task_struct* next);
 extern void enable_irq(void);
 extern void disable_irq(void);
 
-// laziness, using an array as a circular q
+// laziness, using an array as a q
 int next_thread_idx(uint8_t task_idx){
 	int nxt = -1;
 
@@ -49,32 +49,30 @@ void preempt_enable(void){
 }
 
 // accepts as arguments a function pointer address and a pointer to the address of it argument, has to be a struct if many
-// returns thread id
-int fork_task(struct task_struct *p, void*(fn)(void), void *arg){
+// the task_struct will be defined in main, that way we can still access it after freeing the thread alloc
+// also will pass the ret value if any as a pointer, will be defined in main
+// can't have the data in stack when it's freed
+void fork_task(struct task_struct *p, void*(fn)(void), void *arg, void *ret){
 	
 	if(nr_tasks >= NR_TASKS)
-		return -1;
+		panic("max threads reached");
 
 	preempt_disable();
 
-	p = (struct task_struct *) kmalloc(THREAD_SIZE, 16); //since we are round in up, there would be at least <alingement> bytes unused (up to 16 in this case), np
-	if (!p)
-		return -1;
+	p->stack_start = (uint64_t*) kmalloc(THREAD_SIZE, 16); //since we are round in up, there would be at least <alingement> bytes unused (up to 16 in this case), np
+	if (!p->stack_start)
+		panic("could not allocate thread stack for thread %d", nr_tasks);
 
-	//p->priority = current->priority;
-	p->state = TASK_RUNNING;
-	//p->counter = p->priority;
-	p->preempt_count = 1; //disable preemtion until schedule_tail
-
+	p->state = TASK_READY;
+	p->preempt_count = 1; //disable preemtion until starting to execute thread
 	p->cpu_context.x19 = (uint64_t)fn;
 	p->cpu_context.x20 = (uint64_t)arg;
+	p->cpu_context.x21 = (uint64_t)ret;
 	p->cpu_context.pc  = (uint64_t)ret_from_fork;
-	p->cpu_context.sp  = (uint64_t)p + THREAD_SIZE;
-    // change below for adapting to circular q round robin scheduler
+	p->cpu_context.sp  = (uint64_t) p->stack_start + (uint64_t) THREAD_SIZE;
 	int pid = nr_tasks++;
 	task[pid] = p;	
 	preempt_enable();
-	return pid;
 }
 
 void scheduler_tick(void){
@@ -136,18 +134,17 @@ void yield_task(void){
 // waits until a thread finishes
 // how to return? make another array of free tasks with ret values?
 // put ret value on task_struct when forking a new task?
-void join_task(struct task_struct *p, void* ret){
-	 while(p->state != TASK_ZOMBIE || p != NULL){}
+void join_task(struct task_struct *p){
+	 if(p->state != TASK_ZOMBIE || p != NULL)
+	 	yield_task();
 }
 
 //after the code of a task ends pc is sent here
 void exit_task(void){
-	// hear me out on this one
-	// when freeing current will still exist in memory bcs we are just changing the location->is_allocated to 0
-	// and we can interpret this function just as a continuation of the task, so we don't need to disable preemption
-	// need to test
 	current->state = TASK_ZOMBIE;
-	kfree(current);
+	kfree(current->stack_start);
+	task[task_id] = task[nr_tasks - 1];
+	nr_tasks--;
 	schedule();
 }
 

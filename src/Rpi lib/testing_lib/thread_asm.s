@@ -1,9 +1,10 @@
 .globl ret_from_fork
 ret_from_fork:
     bl preempt_enable
-    mov x0, x20
-    blr x19
-    b exit_task        
+    mov x0, x20 // arg first arg to function
+    mov x1, x21 // ret value second arg to function
+    blr x19     // jump to function
+    b exit_task // finish and zombifie thread
 
 // also known as brain surgery
 .globl cpu_switch_to

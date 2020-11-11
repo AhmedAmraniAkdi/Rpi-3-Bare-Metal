@@ -49,7 +49,8 @@ struct cpu_context {
 
 struct task_struct {
 	struct cpu_context cpu_context;
-	uint64_t state;
+	uint64_t *stack_start;
+	uint8_t state;
 	uint8_t preempt_count; // 1 if executing critical stuff
 };
 
@@ -57,8 +58,8 @@ struct task_struct {
 void schedule(void);
 void scheduler_tick(void);
 void timer_tick_clear(void);
-int  fork_task(struct task_struct *p, void*(fn)(void), void *arg);
+void fork_task(struct task_struct *p, void*(fn)(void), void *arg, void *ret);
 void yield_task(void);
-void join_task(struct task_struct *p, void* ret);
+void join_task(struct task_struct *p);
 
 #endif
