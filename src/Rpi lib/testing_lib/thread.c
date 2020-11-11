@@ -148,4 +148,4 @@ void exit_task(void){
 	schedule();
 }
 
-//void create_thread_pool(uint8_t num_threads){} why no make some sort of threads cache, that way we don't have to keep allocating and deallocating mem?
+

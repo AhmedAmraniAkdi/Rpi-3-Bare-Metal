@@ -7,8 +7,8 @@
 // https://en.wikipedia.org/wiki/Calling_convention#ARM_(A64)
 extern void PUT32(unsigned, unsigned);
 extern void PUT8(unsigned, unsigned);
-extern unsigned GET32(unsigned);
-extern unsigned GET8(unsigned);
+extern uint32_t GET32(unsigned);
+extern uint8_t GET8(unsigned);
 extern void CYCLE_DELAY(unsigned);
 extern void DUMMY();
 extern void BRANCHTO(unsigned);
@@ -40,15 +40,26 @@ void rpi_set_output(int (*putc_fp)(int), int (*puts_fp)(const char *));
 
 int printk(const char *format, ...);
 
-/*******************************************************************************
- * simple memory allocation using linked lists
- */
+/*********MEMORY ALLOCATION USING LINKED LISTS*************************/
 
-void *kmalloc(uint64_t nbytes, uint8_t alignement);
-
+void *kmalloc(uint64_t nbytes, uint16_t alignement);
 void heap_init(void);
-
 void kfree(void *ptr);
 
+/***********GENERIC LINKED LISTS************************/
 
+typedef struct node{
+    node* next;    // next node
+    uintptr_t ptr; // pointer to data
+} node;
+
+void add_circular(node* entry, void* ptr_data);
+void remove_circular(node* entry, void* ptr_data);
+node* pop(node* entry);
+void push(node* entry, void* ptr_data);
+void remove_element(node* entry, void* ptr_data);
+// void append(node* entry){}
+// void prepend(node* entry){}
+// int is_present(node* entry, void* ptr_data){}
+// int is_empty(node* entry){}
 #endif

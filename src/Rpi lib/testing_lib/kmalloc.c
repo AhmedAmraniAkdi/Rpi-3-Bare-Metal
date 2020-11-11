@@ -20,7 +20,7 @@ typedef struct heap_segment{
     uint32_t segment_size;  
 } heap_segment_t;
 
-void * kmalloc(uint64_t bytes, uint8_t alignement) {
+void * kmalloc(uint64_t bytes, uint16_t alignement) {
     heap_segment_t * curr, *best = NULL;
     int diff, best_diff = 0x7fffffff; // Max signed int
 
