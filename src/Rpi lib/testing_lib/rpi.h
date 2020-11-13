@@ -56,19 +56,37 @@ void kfree(void *ptr);
 void kfree_all(void);
 
 /***********GENERIC LINKED LISTS************************/
-/*
+
+// normal linked lists
 typedef struct node{
-    node* next;    // next node
-    uintptr_t ptr; // pointer to data
+    struct node *next;
+    uintptr_t ptr;
 } node;
 
-void add_circular(node* entry, void* ptr_data);
-void remove_circular(node* entry, void* ptr_data);
-node* pop(node* entry);
-void push(node* entry, void* ptr_data);
-void remove_element(node* entry, void* ptr_data);
-// void append(node* entry){}
-// void prepend(node* entry){}
-// int is_present(node* entry, void* ptr_data){}
-// int is_empty(node* entry){}*/
+typedef struct Q {
+    node *head, *tail;
+    unsigned cnt;
+} Q_t;
+
+int Q_empty(Q_t *q);
+node *Q_pop(Q_t *q);
+void Q_append(Q_t *q, node *e);
+void Q_push(Q_t *q, node *e);
+void Q_insert_after(Q_t *q, node *e, node *e_new);
+node *Q_start(Q_t *q);
+node *Q_next(node *e);
+unsigned Q_nelem(Q_t *q);
+
+// circular linked lists
+// we can use the same struct node as header
+// uintptr would be num of elemets
+// and *next the nodes
+//                b->c|
+//    header->   a|<-d
+//
+//
+typedef node circularQ_t;
+void add_circular(circularQ_t* entry, node* e);
+void remove_circular(circularQ_t* entry, node* e);
+
 #endif

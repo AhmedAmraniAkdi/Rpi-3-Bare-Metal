@@ -10,6 +10,7 @@
 // defined in linked file after bss
 extern unsigned int __heap_start;
 #define HEAP_SIZE 0x100000 // 1MB
+static int heap_initialized;
 
 static heap_segment_t * heap_segment_list_head;
 
@@ -23,6 +24,9 @@ static heap_segment_t * heap_segment_list_head;
 
 // address of returned pointer should be a multiple of alignment.
 void * kmalloc(uint64_t bytes, uint16_t alignement) {
+    if(!heap_initialized){
+        heap_init();
+    }
     heap_segment_t * curr, *best = NULL;
     int diff, best_diff = 0x7fffffff; // Max signed int
 
@@ -95,6 +99,7 @@ void kfree(void *ptr) {
 }
 
 void heap_init(void) {
+    heap_initialized = 1;
     heap_segment_list_head = (heap_segment_t *) &__heap_start;
     heap_segment_list_head->next = NULL;
     heap_segment_list_head->prev = NULL; // before the heap there is the bss
@@ -104,6 +109,9 @@ void heap_init(void) {
 }
 
 void * heap_segment_list_head_ptr(void){
+    if(!heap_initialized){
+        heap_init();
+    }
     return (void*) heap_segment_list_head;
 }
 
