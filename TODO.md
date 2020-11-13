@@ -1,6 +1,6 @@
  Threads:
- - Make test for kmalloc_
- - Threads
+ - Test generic linked lists
+ - Test thread package
  
  
  - House cleaning 

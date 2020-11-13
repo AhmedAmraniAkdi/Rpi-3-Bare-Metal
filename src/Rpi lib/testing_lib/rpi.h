@@ -41,13 +41,22 @@ void rpi_set_output(int (*putc_fp)(int), int (*puts_fp)(const char *));
 int printk(const char *format, ...);
 
 /*********MEMORY ALLOCATION USING LINKED LISTS*************************/
+typedef struct heap_segment{
+    struct heap_segment * next;
+    struct heap_segment * prev;
+    uintptr_t alloc_ptr;
+    uint8_t is_allocated;
+    uint32_t segment_size;  
+} heap_segment_t;
 
-void *kmalloc(uint64_t nbytes, uint16_t alignement);
+void* heap_segment_list_head_ptr(void);
+void* kmalloc(uint64_t nbytes, uint16_t alignement);
 void heap_init(void);
 void kfree(void *ptr);
+void kfree_all(void);
 
 /***********GENERIC LINKED LISTS************************/
-
+/*
 typedef struct node{
     node* next;    // next node
     uintptr_t ptr; // pointer to data
@@ -61,5 +70,5 @@ void remove_element(node* entry, void* ptr_data);
 // void append(node* entry){}
 // void prepend(node* entry){}
 // int is_present(node* entry, void* ptr_data){}
-// int is_empty(node* entry){}
+// int is_empty(node* entry){}*/
 #endif

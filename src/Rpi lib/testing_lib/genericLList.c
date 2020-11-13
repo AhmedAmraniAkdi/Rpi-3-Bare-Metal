@@ -8,7 +8,7 @@
 //    node* next;    // next node
 //    uintptr_t ptr; // pointer to data
 //} node;
-
+/*
 void add_circular(node* entry, void* ptr_data){
     // empty
     if(entry->next == NULL && entry->ptr == 0){
@@ -72,7 +72,7 @@ void remove_element(node* entry, void* ptr_data){
     // nothing? heap is shared betwenn all threads?
     kfree(found);
 }
-
+*/
 // insert at end
 // void append(node* entry){}
 // remove from end

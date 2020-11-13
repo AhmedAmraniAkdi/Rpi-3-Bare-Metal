@@ -1,5 +1,5 @@
-#include "rpi.h"
 #include "assert.h"
+#include "rpi.h"
 #include "helper_macros.h"
 #include <stdint.h>
 
@@ -13,20 +13,23 @@ extern unsigned int __heap_start;
 
 static heap_segment_t * heap_segment_list_head;
 
-typedef struct heap_segment{
+/*typedef struct heap_segment{
     struct heap_segment * next;
     struct heap_segment * prev;
+    uintptr_t alloc_ptr;
     uint8_t is_allocated;
     uint32_t segment_size;  
-} heap_segment_t;
+} heap_segment_t;*/
 
+// address of returned pointer should be a multiple of alignment.
 void * kmalloc(uint64_t bytes, uint16_t alignement) {
     heap_segment_t * curr, *best = NULL;
     int diff, best_diff = 0x7fffffff; // Max signed int
 
-    // Add the header to the number of bytes we need and make the size <alignement> byte aligned
-    bytes += sizeof(heap_segment_t);
-    bytes = pi_roundup(bytes, alignement);
+    // ok so, if we want the pointer to be aligned, we will have to add to the header size up to <alignment> bytes
+    // otherwise the pointer to the data wont be aligned
+    // we can't round up now because we don't know the start of the allocation (the best one)
+    bytes = sizeof(heap_segment_t) + alignement + bytes;
     
 
     // Find the allocation that is closest in size to this request
@@ -42,40 +45,52 @@ void * kmalloc(uint64_t bytes, uint16_t alignement) {
         return NULL;
 
     // If the best difference we could come up with was large, split up this segment into two.
-    // Since our segment headers are rather large, the criterion for splitting the segment is that
-    // when split, the segment not being requested should be twice a header size
     if (best_diff > (int)(2 * sizeof(heap_segment_t))) {
-        
-        // i set the struct below, no need to zero it
         curr = best->next;
-        best->next = ((char*)(best)) + bytes;
+        best->next = (struct heap_segment*) pi_roundup((((uintptr_t)(best) + bytes)), 8); // aligned to 8 bytes
         best->next->next = curr;
+        curr->prev = best->next;
         best->next->prev = best;
         best->next->segment_size = best->segment_size - bytes;
+        best->next->alloc_ptr = 0;
+        best->next->is_allocated = 0;
         best->segment_size = bytes;
     }
 
     best->is_allocated = 1;
-
-    return best + 1; // pointer directly after header
+    // address of returned pointer should be a multiple of alignment.
+    best->alloc_ptr = pi_roundup((uintptr_t) best + sizeof(heap_segment_t), alignement);
+    demand(is_aligned(best->alloc_ptr, alignement), "pointer allocated not aligned <%d>", alignement);
+    return (void*) best->alloc_ptr;
 }
 
 void kfree(void *ptr) {
-    heap_segment_t * seg = ptr - sizeof(heap_segment_t);
-    seg->is_allocated = 0;
-
-    // try to coalesce segments to the left
-    while(seg->prev != NULL && !seg->prev->is_allocated) {
-        seg->prev->next = seg->next;
-        seg->next->prev = seg->prev;
-        seg->prev->segment_size += seg->segment_size;
-        seg = seg->prev;
+    heap_segment_t* temp = heap_segment_list_head;
+    //printk("\n1");
+    while(temp){
+        if(temp->alloc_ptr == (uintptr_t) ptr){
+            break;
+        }
+        temp = temp->next;
     }
-    // try to coalesce segments to the right
-    while(seg->next != NULL && !seg->next->is_allocated) {
-        seg->segment_size += seg->next->segment_size;
-        seg->next = seg->next->next;
-        seg->next->prev = seg;
+    demand(temp != NULL, "header of pointer not found when freeing?");
+    temp->is_allocated = 0;
+    temp->alloc_ptr = 0;
+    // try to grp segments to the left
+    //printk("2");
+    while(temp->prev != NULL && !temp->prev->is_allocated) {
+        temp->prev->next = temp->next;
+        temp->next->prev = temp->prev;
+        temp->prev->segment_size += temp->segment_size;
+        temp->prev->alloc_ptr = 0;
+        temp = temp->prev;
+    }
+    // try to grp segments to the right
+    while(temp->next != NULL && !temp->next->is_allocated) {
+        temp->segment_size += temp->next->segment_size;
+        temp->next = temp->next->next;
+        if(temp->next != NULL)
+            temp->next->prev = temp;
     }
 }
 
@@ -83,6 +98,15 @@ void heap_init(void) {
     heap_segment_list_head = (heap_segment_t *) &__heap_start;
     heap_segment_list_head->next = NULL;
     heap_segment_list_head->prev = NULL; // before the heap there is the bss
+    heap_segment_list_head->alloc_ptr = 0;
     heap_segment_list_head->segment_size = HEAP_SIZE;
     heap_segment_list_head->is_allocated = 0;
+}
+
+void * heap_segment_list_head_ptr(void){
+    return (void*) heap_segment_list_head;
+}
+
+void kfree_all(void){
+    heap_init();
 }

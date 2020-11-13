@@ -4,7 +4,7 @@
 #include "thread.h"
 #include "helper_macros.h"
 
-
+/*
 static struct task_struct *current;
 static node* entry;
 static int nr_tasks;
@@ -128,6 +128,6 @@ void exit_task(void){
 	remove_circular(entry, current);
 	nr_tasks--;
 	schedule();
-}
+}*/
 
 
