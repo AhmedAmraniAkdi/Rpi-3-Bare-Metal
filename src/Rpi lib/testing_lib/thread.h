@@ -55,7 +55,7 @@ void thread_init(void);
 void schedule(void);
 void scheduler_tick(void);
 void timer_tick_clear(void); // does nothing
-void fork_task(struct task_struct *p, void*(fn)(void), void *arg, void *ret);
+void fork_task(struct task_struct *p, void (fn)(void *, void*), void *arg, void *ret);
 void yield_task(void);
 void join_task(struct task_struct *p);
 

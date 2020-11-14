@@ -6,7 +6,8 @@ CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles 
 #SRC = testing_armtimer_int.c 
 #SRC = test-kmalloc.c
 #SRC = test_genericlinkedlists.c
-SRC = thread_test.c
+#SRC = thread_test.c
+SRC = 
 OBJS = $(SRC:.c=.o)
 
 all : libpi kernel8.img 

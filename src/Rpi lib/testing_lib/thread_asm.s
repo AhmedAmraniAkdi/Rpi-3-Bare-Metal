@@ -7,7 +7,7 @@ ret_from_fork:
     b exit_task // finish and zombifie thread
 
 // also known as brain surgery
-.globl cpu_switch_to
+.globl context_switch
 context_switch:
     mov x10, #0 //#THREAD_CPU_CONTEXT
     add x8, x0, x10 // I mean we are not doing anything here ?

@@ -17,6 +17,7 @@ void arm_timer_clearer(){
 void task(void *arg, void *ret){
     int * parameter = (int *) arg;
     while(1){
+        delay_ms(500);
         printk("HELLO FROM TASK %d\n", *parameter);
     }
 }
@@ -24,7 +25,9 @@ void task(void *arg, void *ret){
 void joinable_task(void *arg, void *ret){
     int i = 0;
     while(i < 5){
+        delay_ms(500);
         printk("joinable task %d/5\n", i + 1);
+        i++;
     }
 }
 
@@ -34,16 +37,18 @@ void notmain(){
     register_irq_handler(ARM_TIMER, scheduler_tick, arm_timer_clearer);
 
     struct task_struct pthreads[6];
+    int k[5] = {0,1,2,3,4};
 
     for(int i = 0; i < 5; i++){
-        fork_task(&pthreads[i], &task, &i, NULL);
+        fork_task(&pthreads[i], &task, &k[i], NULL);
     }
 
     fork_task(&pthreads[5], &joinable_task, NULL, NULL);
 
-    timer_interrupt_init(0x10000);
+    timer_interrupt_init(0x1000);
 
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < 5; i++){
+        delay_ms(500);
         printk("back at main\n");
     }
 
@@ -51,6 +56,7 @@ void notmain(){
     join_task(&pthreads[5]);
 
     while(1){
+        delay_ms(500);
         printk("from main: joinable task ended\n");
     }
 }

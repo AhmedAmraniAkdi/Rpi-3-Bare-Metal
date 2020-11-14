@@ -9,7 +9,7 @@ static int t_init;
 // sched init? main program thread?
 static struct task_struct main_task; // will be 0 initialized
 static struct task_struct *current = &main_task;
-static circularQ_t* entry;
+static circularQ_t entry;
 
 extern void ret_from_fork(void);
 extern void context_switch(struct task_struct* prev, struct task_struct* next);
@@ -20,7 +20,7 @@ void thread_init(void){
 	node *temp = (node *) kmalloc(sizeof(node), 16);
 	temp->next = NULL;
 	temp->ptr = (uintptr_t) &main_task;
-	add_circular(entry, temp);
+	add_circular(&entry, temp);
 	t_init = 1;
 }
 
@@ -35,18 +35,18 @@ void preempt_enable(void){
 // the task_struct will be defined in main, that way we can still access it after freeing the thread alloc
 // also will pass the ret value if any as a pointer, will be defined in main
 // can't have the data in stack when it's freed
-void fork_task(struct task_struct *p, void *(fn)(void *, void *), void *arg, void *ret){
+void fork_task(struct task_struct *p, void (*fn)(void *, void *), void *arg, void *ret){
 	if(!t_init)
 		thread_init();
 
-	if(entry->ptr >= NR_TASKS)
+	if(entry.ptr >= NR_TASKS)
 		panic("max threads reached");
 
 	preempt_disable();
 
 	p->stack_start = (uintptr_t) kmalloc(THREAD_SIZE, 16);
 	if (!p->stack_start)
-		panic("could not allocate thread stack for thread %d", entry->ptr);
+		panic("could not allocate thread stack for thread %d", entry.ptr);
 
 	p->state = TASK_READY;
 	p->preempt_count = 1; //disable preemtion until starting to execute thread
@@ -61,7 +61,7 @@ void fork_task(struct task_struct *p, void *(fn)(void *, void *), void *arg, voi
 	temp->next = NULL;
 	temp->ptr = (uintptr_t) p;
 	
-	add_circular(entry, temp);
+	add_circular(&entry, temp);
 	preempt_enable();
 }
 
@@ -93,16 +93,16 @@ void switch_to(struct task_struct * next)
 //find next task that is ready
 void schedule(void){
 
-	if(entry->ptr == 1) // if only init task return
+	if(entry.ptr == 1) // if only init task return
 		return;
 
 	preempt_disable();
-	node *temp = entry->next; 
+	node *temp = entry.next; 
 	struct task_struct *temp_ = NULL;
 
 	// current has state == running, won't get chosen in loop
 	int found = 0;
-	for(int i = 0; i < entry->ptr; i++, temp = temp->next){
+	for(int i = 0; i < entry.ptr; i++, temp = temp->next){
 		temp_ = (struct task_struct *) temp->ptr;
 		if(temp_->state == TASK_READY){ // normally, the current task will be running, but when removing entry->next can not be running
 			found  = 1;
@@ -120,7 +120,7 @@ void schedule(void){
 	if(current->state != TASK_ZOMBIE)
 		current->state = TASK_READY;
 	temp_->state = TASK_RUNNING;
-	entry->next = temp; // move entry to new current
+	entry.next = temp; // move entry to new current
 	switch_to(temp_);
 	preempt_enable();
 }
@@ -145,8 +145,8 @@ void exit_task(void){
 	// we free the stack but still using it until scheduling, will be a problem? do i need ot make stack boundaries???
 	// what happens if scheduling happens right in this instant, and in the next task we allocate some memory? -> disable preemption
 	kfree((void *) current->stack_start);
-	node *temp = entry->next; // current node that points on current context struct
-	remove_circular(entry, temp); // we remove it
+	node *temp = entry.next; // current node that points on current context struct
+	remove_circular(&entry, temp); // we remove it
 	// now:
 	//	entry points to the node that was after the one we removed
 	//	the struct pointed by the entry->next node is not the same as current
