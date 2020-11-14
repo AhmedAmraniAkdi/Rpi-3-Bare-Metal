@@ -7,9 +7,6 @@
 #define THREAD_SIZE	4096
 #define NR_TASKS 64 
 
-#define INIT_TASK task[0]
-#define LAST_TASK task[NR_TASKS-1]
-
 // will define more
 #define TASK_RUNNING 0
 #define TASK_WAITING 1
@@ -49,15 +46,15 @@ struct cpu_context {
 
 struct task_struct {
 	struct cpu_context cpu_context;
-	uint64_t *stack_start;
+	uint64_t stack_start;
 	uint8_t state;
 	uint8_t preempt_count; // 1 if executing critical stuff
 };
 
-
+void thread_init(void);
 void schedule(void);
 void scheduler_tick(void);
-void timer_tick_clear(void);
+void timer_tick_clear(void); // does nothing
 void fork_task(struct task_struct *p, void*(fn)(void), void *arg, void *ret);
 void yield_task(void);
 void join_task(struct task_struct *p);

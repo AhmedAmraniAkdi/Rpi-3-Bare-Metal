@@ -70,7 +70,6 @@ void * kmalloc(uint64_t bytes, uint16_t alignement) {
 
 void kfree(void *ptr) {
     heap_segment_t* temp = heap_segment_list_head;
-    //printk("\n1");
     while(temp){
         if(temp->alloc_ptr == (uintptr_t) ptr){
             break;
@@ -80,8 +79,8 @@ void kfree(void *ptr) {
     demand(temp != NULL, "header of pointer not found when freeing?");
     temp->is_allocated = 0;
     temp->alloc_ptr = 0;
+    
     // try to grp segments to the left
-    //printk("2");
     while(temp->prev != NULL && !temp->prev->is_allocated) {
         temp->prev->next = temp->next;
         temp->next->prev = temp->prev;
