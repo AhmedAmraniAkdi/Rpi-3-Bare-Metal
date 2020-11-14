@@ -41,7 +41,7 @@ struct cpu_context {
 	uint64_t d15;
 	uint64_t fp;
 	uint64_t sp;
-	uint64_t pc;
+	uint64_t pc; // link register, not the pc per say, where we come back to after context switchign
 };
 
 struct task_struct {

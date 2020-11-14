@@ -1,9 +1,9 @@
  Threads:
- - Test generic linked lists
  - Test thread package
  
  
  - House cleaning 
+ - Do something about timers
   
 More on interrupts:
  - GPIO/UART interrupts

@@ -35,7 +35,7 @@ void preempt_enable(void){
 // the task_struct will be defined in main, that way we can still access it after freeing the thread alloc
 // also will pass the ret value if any as a pointer, will be defined in main
 // can't have the data in stack when it's freed
-void fork_task(struct task_struct *p, void*(fn)(void), void *arg, void *ret){
+void fork_task(struct task_struct *p, void *(fn)(void *, void *), void *arg, void *ret){
 	if(!t_init)
 		thread_init();
 
@@ -133,7 +133,7 @@ void yield_task(void){
 
 // waits until a thread finishes
 void join_task(struct task_struct *p){
-	 if(p->state != TASK_ZOMBIE || p != NULL)
+	while(p->state != TASK_ZOMBIE)
 	 	yield_task();
 }
 
