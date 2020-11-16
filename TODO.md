@@ -4,6 +4,8 @@
  
 More on threads:
  - check neon instructions and registers are correctly saved when switching context
+ - check memory gets freed correctly
+ - threadpooling
  
 Misc
  - House cleaning 
