@@ -1,29 +1,34 @@
-#include "testing_lib/mini_uart.h"
-#include "testing_lib/rpi.h"
-#include "testing_lib/VCmailbox.h"
+#include "libpi/mini_uart.h"
+#include "libpi/rpi.h"
+#include "libpi/VCmailbox.h"
 
-void notmain()
-{
-    // set up serial console
+// gets arm and core frequencies
+// for rpi 3b+ i get 600MHz for arm and 250MHz for core
+// maybe change it to 1400 later?
+void notmain(){
     uart_init();
     
-    // get the board's unique serial number with a mailbox call
-    mbox[0] = 8*4;                  // length of the message
-    mbox[1] = MBOX_REQUEST;         // this is a request message
+    mbox[0] = 13*4;            
+    mbox[1] = MBOX_REQUEST;         
     
-    mbox[2] = MBOX_TAG_GETSERIAL;   // get serial number command
-    mbox[3] = 8;                    // buffer size
+    mbox[2] = MBOX_TAG_GETCLOCK; 
+    mbox[3] = 8;                    
     mbox[4] = 0;
-    mbox[5] = 0;                    // clear output buffer
+    mbox[5] = 0x000000003;   // ARM        
     mbox[6] = 0;
 
-    mbox[7] = MBOX_TAG_LAST;
+    mbox[7] = MBOX_TAG_GETCLOCK; 
+    mbox[8] = 8;                    
+    mbox[9] = 0;
+    mbox[10] = 0x000000004;   // CORE      
+    mbox[11] = 0;
 
-    uint64_t result = (((uint64_t) mbox[6]) << 32 ) | mbox[5];
-    // send the message to the GPU and receive answer
+    mbox[12] = MBOX_TAG_LAST;
+
     if (mbox_call(MBOX_CH_PROP)) {
-        printk("My serial number is: ");
-        printk("0x%x\n",result);
+        uint32_t arm = mbox[6];
+        uint32_t core = mbox[11];
+        printk("ARM freq = %d -- Core freq = %d \n", arm, core);
     } else {
         printk("Unable to query serial!\n");
     }

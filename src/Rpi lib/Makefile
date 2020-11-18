@@ -1,6 +1,6 @@
 CC= aarch64-none-elf-gcc
 
-LIBPI = testing_lib
+LIBPI = libpi
 CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles -ffreestanding 
 
 #SRC = testing_armtimer_int.c 

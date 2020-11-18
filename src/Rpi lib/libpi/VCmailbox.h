@@ -27,6 +27,7 @@ typedef enum{
 typedef enum{
     MBOX_TAG_GETSERIAL = 0x10004,
     MBOX_TAG_LAST      = 0x0,
+    MBOX_TAG_GETCLOCK  = 0x00030002,
 } mb_tags_t;
 
 int mbox_call(mb_channel_t ch);
