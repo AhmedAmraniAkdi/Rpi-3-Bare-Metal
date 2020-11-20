@@ -71,10 +71,17 @@ void fb_init()
 
 void fill_red(){
     uint32_t *ptr = lfb;
-    for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
-            *ptr = 0x000000ff;
-            ptr++;
+    uint32_t val = 0;
+    uint32_t k = 0;
+    while(1){
+        for(int i = 0; i < height; i = i + 1){
+            for(int j = 0; j < width; j = j + 1){
+                val = ((i*j + k)%256 << 16) | (((4*k*i)%256) << 8) | (((k*j)%256) << 0);
+                *ptr = val;
+                ptr++;
+            }
         }
+        ptr = lfb;
+        k++;
     }
 }

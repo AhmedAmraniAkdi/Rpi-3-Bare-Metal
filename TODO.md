@@ -1,6 +1,8 @@
- Frambuffer and mailboxes:
- - 
- 
+MMU:
+
+More on frambuffer and mailboxes:
+ - Turbo
+ - Go multicore
  
 More on threads:
  - check neon instructions and registers are correctly saved when switching context
