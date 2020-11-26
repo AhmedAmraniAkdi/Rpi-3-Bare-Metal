@@ -3,6 +3,7 @@
 #include "VCmailbox.h"
 #include "rpi.h"
 #include <stdint.h>
+#include "assert.h"
 /* mailbox message buffer */
 volatile uint32_t  __attribute__((aligned(16))) mbox[36];
 
@@ -42,4 +43,26 @@ int mbox_call(mb_channel_t ch){
             return mbox[1] == MBOX_RESPONSE;
     }
     return 0;
+}
+
+uint32_t vc_mem_start_address(void){
+    uart_init();
+    
+    mbox[0] = 8*4;            
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_TAG_GETVCMEM;
+    mbox[3] = 8;
+    mbox[4] = 0;
+    mbox[5] = 0;
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+
+    if (mbox_call(MBOX_CH_PROP)) {
+        return mbox[5];
+    }
+    else{
+        panic("could not query video core base memory");
+    }
 }

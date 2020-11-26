@@ -25,30 +25,15 @@
  *    but we need to make TLB maintenance if we change the tables, because we can have same virtual addresses but mapped to different physical addresses (won't be a
  *    a problem here), this is also a reasonw e have TTBRL0 and TTBRL1, normally one goes to the user and the other to the kernel imaging having only 1, 
  *    then we will need to be maintaining everytime we change from kernel to user (context switch) and populating the tables, etc.
+ *    Just found out you can tag TLB with process ASID (identifiers) so that makes it easier i guess, lots and lots of stuff out there
  * 
  *  - How does cache work? the first time the kernel access and memory cell, it stores the address and it contents on a cache line (tag), the next time we access the
  *    same memory address we go look for it at cache first, if there isnt there then to memory, this poses a problem -> coherence-> there is hardware and attributes
  *    that ensure coherence. Maintenance can be needed when: non coherent DMA, changing instructions, changing memory attributes -> we won't do any of these we, because
  *    the kernel always sees the same memory and nothign moves around.
  * 
- *  - Ah yes, the descriptor:
- * 
- *          +---+--------+-----+-----+---+------------------------+---+----+----+----+----+------+----+----+
- *           | R |   SW   | UXN | PXN | R | Output address [47:12] | R | AF | SH | AP | NS | INDX | TB | VB |
- *           +---+--------+-----+-----+---+------------------------+---+----+----+----+----+------+----+----+
- *               63  58    55 54    53    52  47                    12 11  10   9  8 7  6 5    4    2 1    0
- *
- *   R    - reserve
- *   SW   - reserved for software use
- *   UXN  - unprivileged execute never
- *   PXN  - privileged execute never
- *   AF   - access flag
- *   SH   - shareable attribute
- *   AP   - access permission
- *   NS   - security bit
- *   INDX - index into MAIR register
- *   TB   - table descriptor bit
- *   VB   - validity descriptor bit
+ *  - The descriptor format depends on translation stage and levels, the memory attributes differ, but the basic struct is: 
+ *      some upper MSB for upper attributes, bits 47 to 12 memory address of next table/memory address, then some other lower mem attributes.
  *
  *   - Walking procces:
  *
@@ -61,9 +46,9 @@
  *                         |            |          |                  |                    |     |                  |
  *                  +------+            |          |                  |                    |     |                  |
  *                  |                   |          +----------+       |                    |     |------------------|
- *        +------+  |        PGD        |                     |       +------------------------->| Physical address |
- *        | ttbr |---->+-------------+  |           PUD       |                            |     |------------------|
- *        +------+  |  |             |  | +->+-------------+  |            PMD             |     |                  |
+ *        +------+  |     PGD(LVL0)     |                     |       +------------------------->| Physical address |
+ *        | ttbr |---->+-------------+  |       PUD(LVL1)     |                            |     |------------------|
+ *        +------+  |  |             |  | +->+-------------+  |         PMD(LVL2)          |     |                  |
  *                  |  +-------------+  | |  |             |  | +->+-----------------+     |     +------------------+
  *                  +->| PUD address |----+  +-------------+  | |  |                 |     |     |                  |
  *                     +-------------+  +--->| PMD address |----+  +-----------------+     |     |                  |
@@ -72,7 +57,85 @@
  *                                           +-------------+       |                 |           |                  |
  *                                                                 +-----------------+           |                  |
  *                                                                                               +------------------+
+ * 
+ *  - And as I said, not virtualization -> won't be needing a virtual page allocator, or to treat TTBR_L1 case
+ * 
  * https://github.com/s-matyukevich/raspberry-pi-os/blob/master/docs/lesson06/rpi-os.md
  * https://lowenware.com/blog/osdev/aarch64-mmu-programming/
  * https://github.com/LdB-ECM/Raspberry-Pi/tree/master/10_virtualmemory
+ * https://armv8-ref.codingbelief.com/en/chapter_d4/d43_1_vmsav8-64_translation_table_descriptor_formats.html
+ * https://developer.arm.com/architectures/learn-the-architecture/aarch64-virtualization/stage-2-translation
  */
+
+// will keep it as simple as possible using only what we need.
+
+#include "mmu.h"
+#include "rpi.h"
+#include "VCmailbox.c"
+#include <stdint.h>
+
+static uint64_t L2_table[1024] = {0};
+static uint64_t L1_table[2] = {0};
+
+void populate_tables(void){
+    uint32_t i_block = 0;
+    uint32_t vc_mem_block = vc_mem_start_address()/(1 << 21); // divide by 2MB to get the memory address in 2MB block counts
+
+    // we start to populate
+    // level 1 table
+    // the 3 for next is a table address
+    // the 12 because the address starts at the 12th bit on the descriptor
+    // the 8 because the 63th bit
+    L1_table[0] = (0x8000000000000000) | (((uintptr_t)&L2_table[0]) << 12) | 3;
+    L1_table[1] = (0x8000000000000000) | (((uintptr_t)&L2_table[512]) << 12) | 3;
+
+    // level 2 table
+    // 0x0 to Vc_mem
+    for(i_block = 0; i_block < vc_mem_block; i_block++){
+        L2_table[i_block] = (((uintptr_t)i_block) << 21)         // 2MB memory block
+                            | (1 << 10)                          // accesability flag
+                            | (STAGE2_SH_INNER_SHAREABLE << 8 )  // shareability // depends on how Rpi was built?
+                            | (MT_NORMAL << 2)                   // memory type attribute on MAIR
+                            | (1 << 0);                          // block descriptor
+                            // other attributes are for access permission and security
+    }
+
+    // Vc_mem to MMIO (MMIO is 0x3F000000 which is 1GB - 16 MB which is 512 - 8 in terms of blocks)
+    for(; i_block < (512 - 8); i_block++){
+        L2_table[i_block] = (((uintptr_t)i_block) << 21)         // 2MB memory block
+                            | (1 << 10)                          // accesability flag
+                            | (MT_NORMAL_NC << 2)                // memory type attribute on MAIR
+                            | (1 << 0);                          // block descriptor
+                            // other attributes are for access permission and security
+    /* Note:
+    * The shareability field is only relevant if the memory is a Normal Cacheable memory type. All Device and Normal
+    * Non-cacheable memory regions are always treated as Outer Shareable, regardless of the translation table
+    * shareability attributes.
+    */
+    }
+
+    // the 16 MB of peripherals
+    for(; i_block < 512; i_block++){
+        L2_table[i_block] = (((uintptr_t)i_block) << 21)         // 2MB memory block
+                            | (1 << 10)                          // accesability flag
+                            | (MT_DEVICE_NGNRNE << 2)            // memory type attribute on MAIR
+                            | (1 << 0);                          // block descriptor
+                            // other attributes are for access permission and security
+    }
+
+    // finally the 2MB of mailboxes and QA7_rev stuff
+    L2_table[512] = (((uintptr_t)512) << 21)             // 2MB memory block
+                    | (1 << 10)                          // accesability flag
+                    | (MT_DEVICE_NGNRNE << 2)            // memory type attribute on MAIR
+                    | (1 << 0);                          // block descriptor
+                     // other attributes are for access permission and security
+
+    // and that's it
+    // won't do virtualization so no need for virtual allocation, or another set of virtual tables for TTBRL1
+}
+
+extern void enable_mmu_tables(uint64_t *table_entry);
+
+void mmu_enable(void){
+	enable_mmu_tables(&L1_table[0]);
+}
