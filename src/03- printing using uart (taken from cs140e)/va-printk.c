@@ -13,13 +13,6 @@
 #include <stdint.h>
 
 
-#if 0
-static int internal_putchar(int c) { uart_putc(c); return c; } 
-
-// override this is going through the network.
-int (*rpi_putchar)(int c) = internal_putchar;
-#endif
-
 
 void rpi_set_output(int (*putc_fp)(int), int (*puts_fp)(const char *)) {
     assert(putc_fp);
@@ -138,21 +131,10 @@ int va_printk(char *buf, int n, const char *fmt, va_list args) {
 			assert(width < 64);
 			
 			switch(*fmt) {
-			case 'f':
-			{
-#ifndef RPI_FP_ENABLED
-				panic("float not enabled!!!");
-#else
-				// XXX if you inline this, there is some
-				// problem that happens in interrupt handlers
-				// *EVEN IF* you don't use floats.  i'm 
-				// assuming its some issue w/ frame pointers
-				// or similar?
+			case 'f':{
 				double d = va_arg(args, double);
 				s = __emit_float(num, d, width);
-
 				break;
-#endif
 			}
 			case 'd':
 				s = emit(10, num, 128, va_arg(args, int), width, 1);
@@ -188,20 +170,39 @@ int va_printk(char *buf, int n, const char *fmt, va_list args) {
 	return p - buf;
 }
 
-#ifdef RPI_FP_ENABLED
+char *strcat (char *dest, const char *src) {
+    char *s1 = dest;
+    const char *s2 = src;
+    char c;
+
+    /* Find the end of the string.  */
+    do
+        c = *s1++;
+    while (c != '\0');
+
+    /* Make S1 point before the next character, so we can increment
+       it while memory is read (wins on pipelined cpus).  */
+    s1 -= 2;
+    do {
+        c = *s2++;
+        *++s1 = c;
+    } while (c != '\0');
+    return dest;
+}
 
 // get the integer part of fp number.
 static long trunc(double d) {
         return (long)d;
 }
-// we get 4 digits of precision.
+
+// we get 8 digits of precision.
 static unsigned fp_get_frac(double d) {
 	if(d < 0)
 		d = -d;
 
-	// mod 10,000?
-        return trunc(d * 10000.) % 10000;
+        return trunc(d * 100000000.) % 100000000;
 }
+
 static long fp_get_integral(double d) {
         return trunc(d);
 }
@@ -225,7 +226,7 @@ char * __emit_float(char *num, double d, unsigned width) {
 
 	strcat(p, ".");
 
-	const unsigned frac_len = 4;
+	const unsigned frac_len = 8;
 	emit(10, tmp, 128,  frac, frac_len, 0);
 
 	// have to add leading zeros if small.
@@ -235,4 +236,3 @@ char * __emit_float(char *num, double d, unsigned width) {
 	strcat(p, tmp);
 	return num;
 }
-#endif

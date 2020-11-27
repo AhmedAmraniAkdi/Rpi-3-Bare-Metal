@@ -6,6 +6,7 @@
 #include "assert.h"
 #include "mini_uart.h"
 /* mailbox message buffer */
+static int is_turbo = 0;
 volatile uint32_t  __attribute__((aligned(16))) mbox[36];
 
 enum {
@@ -119,10 +120,32 @@ void print_info_mem_freq(void){
 }
 
 void set_max_freq(void){
-    uint32_t maxclockrate = 0;
 
-    uart_init();
-    
+    uint32_t maxclockrate = 1400000000;
+    // now we set the clock rate to max so we go from 0.6GHz to 1.4GHz
+    mbox[0] = 9*4;            
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_TAG_SETCLOCKRATE;
+    mbox[3] = 12;
+    mbox[4] = 0;
+    mbox[5] = 0x000000003;   // ARM   
+    mbox[6] = maxclockrate;
+    mbox[7] = 0;
+
+    mbox[8] = MBOX_TAG_LAST;
+
+    if(mbox_call(MBOX_CH_PROP)){
+        uint32_t new_rate = mbox[6];
+        demand(new_rate == maxclockrate, "could not set max clock rate, new rate = %d\n", new_rate);
+        is_turbo = 1;
+    } else {
+        panic("could not set vmax arm clock rate");
+    }
+}
+
+uint32_t maxfreq(void){
+
     mbox[0] = 8*4;            
     mbox[1] = MBOX_REQUEST;         
 
@@ -135,30 +158,15 @@ void set_max_freq(void){
     mbox[7] = MBOX_TAG_LAST;
 
     if (mbox_call(MBOX_CH_PROP)) {
-        maxclockrate = mbox[6];
-        // now we set the clock rate to max so we go from 0.6GHz to 1.4GHz
-        mbox[0] = 9*4;            
-        mbox[1] = MBOX_REQUEST;         
-
-        mbox[2] = MBOX_TAG_SETCLOCKRATE;
-        mbox[3] = 12;
-        mbox[4] = 0;
-        mbox[5] = 0x000000003;   // ARM   
-        mbox[6] = maxclockrate;
-        mbox[7] = 0;
-
-        mbox[8] = MBOX_TAG_LAST;
-
-        if(mbox_call(MBOX_CH_PROP)){
-            uint32_t new_rate = mbox[5];
-            demand(new_rate == maxclockrate, "could not set max clock rate, new rate = %d\n", new_rate);
-            print_info_mem_freq();
-        } else {
-            panic("could not set vmax arm clock rate");
-        }
+        return mbox[6];
     }
-    else{
-        panic("could not query vmax arm clock rate");
+    else {
+        panic("could not query max frequency\n");
     }
+    return 0; // error
 }
 
+
+int turbo_status(void){
+    return is_turbo;
+}

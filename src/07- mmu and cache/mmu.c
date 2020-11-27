@@ -74,7 +74,7 @@
 #include "VCmailbox.c"
 #include <stdint.h>
 
-
+// need alignement, shifting 12 will result in out of range address
 static uint64_t __attribute__((aligned(4096))) L2_table[1024] = {0};
 static uint64_t __attribute__((aligned(4096))) L1_table[2] = {0};
 
@@ -85,8 +85,7 @@ void populate_tables(void){
     // we start to populate
     // level 1 table
     // the 3 for next is a table address
-    // the 12 because the address starts at the 12th bit on the descriptor
-    // the 8 because the 63th bit
+    // the 8 for non secure
     L1_table[0] = (0x8000000000000000) | ((uintptr_t)&L2_table[0]) | 3;
     L1_table[1] = (0x8000000000000000) | ((uintptr_t)&L2_table[512]) | 3;
 
