@@ -66,3 +66,97 @@ uint32_t vc_mem_start_address(void){
         panic("could not query video core base memory");
     }
 }
+
+void print_info_mem_freq(void){
+    uart_init();
+    
+    mbox[0] = 23*4;            
+    mbox[1] = MBOX_REQUEST;         
+    
+    mbox[2] = MBOX_TAG_GETCLOCK; 
+    mbox[3] = 8;                    
+    mbox[4] = 0;
+    mbox[5] = 0x000000003;   // ARM        
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_GETCLOCK; 
+    mbox[8] = 8;                    
+    mbox[9] = 0;
+    mbox[10] = 0x000000004;   // CORE      
+    mbox[11] = 0;
+
+    mbox[12] = MBOX_TAG_GETVCMEM;
+    mbox[13] = 8;
+    mbox[14] = 0;
+    mbox[15] = 0;
+    mbox[16] = 0;
+
+    mbox[17] = MBOX_TAG_GETARMMEM;
+    mbox[18] = 8;
+    mbox[19] = 0;
+    mbox[20] = 0;
+    mbox[21] = 0;
+
+    mbox[22] = MBOX_TAG_LAST;
+
+    if (mbox_call(MBOX_CH_PROP)) {
+
+        uint32_t arm = mbox[6];
+        uint32_t core = mbox[11];
+        uint32_t core_base_mem = mbox[15];
+        uint32_t core_tot_mem = mbox[16];
+        uint32_t arm_base_mem = mbox[20];
+        uint32_t arm_tot_mem = mbox[21];
+
+        printk("ARM freq = %d -- Core freq = %d \n", arm, core);
+        printk("core mem starts at 0x%x and it's of size 0x%x\n", core_base_mem, core_tot_mem);
+        printk("arm mem starts at 0x%x and it's of size 0x%x\n", arm_base_mem, arm_tot_mem);
+    } else {
+        panic("Unable to query serial!\n");
+    }
+}
+
+void set_max_freq(void){
+    uint32_t maxclockrate = 0;
+
+    uart_init();
+    
+    mbox[0] = 8*4;            
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_TAG_GETMAXCLOCKRATE;
+    mbox[3] = 8;
+    mbox[4] = 0;
+    mbox[5] = 0x000000003;   // ARM   
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+
+    if (mbox_call(MBOX_CH_PROP)) {
+        maxclockrate = mbox[6];
+        // now we set the clock rate to max so we go from 0.6GHz to 1.4GHz
+        mbox[0] = 9*4;            
+        mbox[1] = MBOX_REQUEST;         
+
+        mbox[2] = MBOX_TAG_SETCLOCKRATE;
+        mbox[3] = 12;
+        mbox[4] = 0;
+        mbox[5] = 0x000000003;   // ARM   
+        mbox[6] = maxclockrate;
+        mbox[7] = 0;
+
+        mbox[8] = MBOX_TAG_LAST;
+
+        if(mbox_call(MBOX_CH_PROP)){
+            uint32_t new_rate = mbox[5];
+            demand(new_rate == maxclockrate, "could not set max clock rate, new rate = %d\n", new_rate);
+            print_info_mem_freq();
+        } else {
+            panic("could not set vmax arm clock rate");
+        }
+    }
+    else{
+        panic("could not query vmax arm clock rate");
+    }
+}
+

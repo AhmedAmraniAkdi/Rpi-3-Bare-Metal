@@ -5,7 +5,7 @@
 
 // gets arm and core frequencies
 // for rpi 3b+ i get 600MHz for arm and 250MHz for core
-// returns 128mb for arm and core mems??
+// returns 128mb for arm and core mems?? Fixed -> needs fixup.dat file!
 
 // add turbo later
 void notmain(){
@@ -56,8 +56,8 @@ void notmain(){
         printk("Unable to query serial!\n");
     }
 
-    fb_init();
-    fill_red();
+    //fb_init();
+    //fill_red();
 
     while(1) {};
 }

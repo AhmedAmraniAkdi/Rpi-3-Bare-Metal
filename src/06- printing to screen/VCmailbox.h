@@ -1,6 +1,7 @@
 #ifndef VC_MB_H
 #define VC_MB_H
 
+#include <stdint.h>
 // gpu name is videocore
 // cpu and gpu communicate through mailbox 0 and 1 to query information
 // there also another set of mailboxes between cpu cores, this file is only about gpu mailbox
@@ -30,8 +31,13 @@ typedef enum{
     MBOX_TAG_GETCLOCK  = 0x00030002,
     MBOX_TAG_GETVCMEM  = 0x00010006,
     MBOX_TAG_GETARMMEM = 0x00010005,
+    MBOX_TAG_GETMAXCLOCKRATE = 0x00030004,
+    MBOX_TAG_SETCLOCKRATE = 0x00038002,
 } mb_tags_t;
 
 int mbox_call(mb_channel_t ch);
+uint32_t vc_mem_start_address(void);
+void set_max_freq(void);
+void print_info_mem_freq(void);
 
 #endif
