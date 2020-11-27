@@ -1,6 +1,8 @@
 #include "rpi.h"
 #include "mini_uart.h"
 #include "gpio.h"
+#include "VCmailbox.h"
+#include <stdint.h>
 
 static int is_enabled;
 
@@ -48,6 +50,25 @@ void uart_puts(char* s){
 }
 
 void uart_init(){
+    /*uint32_t core_clock_rate = 0;
+    
+    mbox[0] = 8*4;            
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_TAG_GETCLOCK;
+    mbox[3] = 8;
+    mbox[4] = 0;
+    mbox[5] = 0x000000004;   // ARM   
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+
+    if (mbox_call(MBOX_CH_PROP)) {
+        core_clock_rate = mbox[6];
+    }
+    else{
+        reboot();
+    }*/
 
     // enable mini uart
     PUT32(AUX_ENABLES, 1);
@@ -68,6 +89,7 @@ void uart_init(){
     // clear FIFOs
     PUT32(AUX_MU_IIR_REG, 6);
     //250000000/baudrate/8 - 1 = divisor
+    //uint32_t divisor = (core_clock_rate / (115200 * 8)) - 1;
     PUT32(AUX_MU_BAUD_REG, 270);
 
     // setting gpios to alternate functions and pull off

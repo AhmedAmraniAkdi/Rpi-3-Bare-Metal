@@ -5,8 +5,8 @@
 #include "libpi/timer.h"
 #include "libpi/mini_uart.h"
 #include "libpi/thread.h"
-#include "libpi/helper_macros.h"
 #include "libpi/mmu.h"
+#include "libpi/helper_macros.h"
 #include "libpi/VCmailbox.h"
 
 // armtimer for now, will change ti to either sytemtimer or cpu timers
@@ -35,13 +35,14 @@ void joinable_task(void *arg, void *ret){
 
 void notmain(){
     //set_max_freq();
-    print_info_mem_freq();
     uart_init();
+    print_info_mem_freq();
+
+    interrupt_init();
 
     populate_tables();
     mmu_enable();
     
-    interrupt_init();
     register_irq_handler(ARM_TIMER, scheduler_tick, arm_timer_clearer);
 
     struct task_struct pthreads[6];

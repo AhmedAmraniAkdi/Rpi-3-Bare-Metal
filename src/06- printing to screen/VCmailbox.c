@@ -4,6 +4,7 @@
 #include "rpi.h"
 #include <stdint.h>
 #include "assert.h"
+#include "mini_uart.h"
 /* mailbox message buffer */
 volatile uint32_t  __attribute__((aligned(16))) mbox[36];
 
@@ -65,6 +66,7 @@ uint32_t vc_mem_start_address(void){
     else{
         panic("could not query video core base memory");
     }
+    return 0;  // error
 }
 
 void print_info_mem_freq(void){

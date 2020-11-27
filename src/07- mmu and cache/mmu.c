@@ -74,8 +74,9 @@
 #include "VCmailbox.c"
 #include <stdint.h>
 
-static uint64_t L2_table[1024] = {0};
-static uint64_t L1_table[2] = {0};
+
+static uint64_t __attribute__((aligned(4096))) L2_table[1024] = {0};
+static uint64_t __attribute__((aligned(4096))) L1_table[2] = {0};
 
 void populate_tables(void){
     uint32_t i_block = 0;
@@ -86,8 +87,8 @@ void populate_tables(void){
     // the 3 for next is a table address
     // the 12 because the address starts at the 12th bit on the descriptor
     // the 8 because the 63th bit
-    L1_table[0] = (0x8000000000000000) | (((uintptr_t)&L2_table[0]) << 12) | 3;
-    L1_table[1] = (0x8000000000000000) | (((uintptr_t)&L2_table[512]) << 12) | 3;
+    L1_table[0] = (0x8000000000000000) | ((uintptr_t)&L2_table[0]) | 3;
+    L1_table[1] = (0x8000000000000000) | ((uintptr_t)&L2_table[512]) | 3;
 
     // level 2 table
     // 0x0 to Vc_mem

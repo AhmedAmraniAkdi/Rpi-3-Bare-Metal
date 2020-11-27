@@ -1,0 +1,12 @@
+Exception return from AArch64 EL2 to AArch64 EL1 PC 0x800a4
+ARM freq = 700000000 -- Core freq = 700000000 
+core mem starts at 0x3c000000 and it's of size 0x4000000
+arm mem starts at 0x0 and it's of size 0x3c000000
+back at main
+back at main
+back at main
+back at main
+back at main
+will wait for joinable task now
+joinable task 1/5
+joinable task 2/5

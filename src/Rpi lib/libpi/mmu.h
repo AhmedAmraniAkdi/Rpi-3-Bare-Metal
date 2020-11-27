@@ -1,5 +1,5 @@
-#ifndef MMU_H
-#define  MMU_H
+#ifndef _MMU_H
+#define _MMU_H
 
 // NC = non cachable
 // NGN : no gathering

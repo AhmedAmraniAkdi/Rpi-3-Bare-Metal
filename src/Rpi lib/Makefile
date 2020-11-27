@@ -6,7 +6,7 @@ CFLAGS = -I$(LIBPI) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles 
 #SRC = testing_armtimer_int.c 
 #SRC = test-kmalloc.c
 #SRC = test_genericlinkedlists.c
-SRC = thread_test.c
+SRC = thread_test_mmu_turbo.c
 #SRC = testing_vcmb.c
 OBJS = $(SRC:.c=.o)
 
