@@ -39,5 +39,7 @@ int mbox_call(mb_channel_t ch);
 uint32_t vc_mem_start_address(void);
 void set_max_freq(void);
 void print_info_mem_freq(void);
+uint32_t maxfreq(void);
+int turbo_status(void);
 
 #endif

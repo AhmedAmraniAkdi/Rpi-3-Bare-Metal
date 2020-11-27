@@ -34,7 +34,7 @@ void joinable_task(void *arg, void *ret){
 }
 
 void notmain(){
-    //set_max_freq();
+    set_max_freq();
     uart_init();
     print_info_mem_freq();
 

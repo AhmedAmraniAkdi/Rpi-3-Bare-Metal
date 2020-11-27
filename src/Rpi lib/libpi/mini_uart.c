@@ -50,26 +50,9 @@ void uart_puts(char* s){
 }
 
 void uart_init(){
-    /*uint32_t core_clock_rate = 0;
-    
-    mbox[0] = 8*4;            
-    mbox[1] = MBOX_REQUEST;         
-
-    mbox[2] = MBOX_TAG_GETCLOCK;
-    mbox[3] = 8;
-    mbox[4] = 0;
-    mbox[5] = 0x000000004;   // ARM   
-    mbox[6] = 0;
-
-    mbox[7] = MBOX_TAG_LAST;
-
-    if (mbox_call(MBOX_CH_PROP)) {
-        core_clock_rate = mbox[6];
+    if(is_enabled){
+        return;
     }
-    else{
-        reboot();
-    }*/
-
     // enable mini uart
     PUT32(AUX_ENABLES, 1);
     // p10 if aux enables is 0, no access to registers
@@ -88,9 +71,13 @@ void uart_init(){
     PUT32(AUX_MU_MCR_REG,0);
     // clear FIFOs
     PUT32(AUX_MU_IIR_REG, 6);
-    //250000000/baudrate/8 - 1 = divisor
+
     //uint32_t divisor = (core_clock_rate / (115200 * 8)) - 1;
-    PUT32(AUX_MU_BAUD_REG, 270);
+    if(!turbo_status()){ // core freq 250MHz
+        PUT32(AUX_MU_BAUD_REG, 270);
+    } else{ // core freq 400MHz
+        PUT32(AUX_MU_BAUD_REG, 433);
+    }
 
     // setting gpios to alternate functions and pull off
     gpio_set_function(GPIO_PIN14, GPIO_FUNC_ALT5);

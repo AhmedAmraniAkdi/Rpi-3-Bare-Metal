@@ -2,8 +2,10 @@
 
 #include "rpi.h"
 #include "va-printk.h"
+#include "mini_uart.h"
 
 int printk(const char *fmt, ...) {
+    uart_init();
     // this is a really huge buffer for a pi.   could do this better.
     static char buf[1024];
     va_list args;
