@@ -18,8 +18,8 @@
  *    ( all msb 0), using T0SZ = 33 -> leaves us with 64 - 33 = 31 bits -> 2GB. 
  *    Memory layout is: 0 -> VC core -> MMIO -> QA7_rev3.4.pdf
  * 
- *  - Why use mmu for 1:1 mapping? enabling D and I caches and some other attributes, we can use MAIR register which is an array of 8 byte elements where we store 
- *    attributes configurations and in the descriptor we indicate the index.
+ *  - Why use mmu for 1:1 mapping? enabling D and I caches and some other attributes, we can use MAIR register  where we store attributes configurations 
+ *    and in the descriptor we indicate the index.
  * 
  *  - There is also a TLB cache in order to make it easier to do the walk table, translations are directly stored, that way we wont need to do the table walk everyime
  *    but we need to make TLB maintenance if we change the tables, because we can have same virtual addresses but mapped to different physical addresses (won't be a
