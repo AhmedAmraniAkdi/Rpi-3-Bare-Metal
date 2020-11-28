@@ -74,7 +74,7 @@
 #include "VCmailbox.c"
 #include <stdint.h>
 
-// need alignement, shifting 12 will result in out of range address
+// need alignement, address is at 12th bit
 static uint64_t __attribute__((aligned(4096))) L2_table[1024] = {0};
 static uint64_t __attribute__((aligned(4096))) L1_table[2] = {0};
 
