@@ -46,3 +46,9 @@ CYCLE_DELAY:
     subs x0, x0, #1
     bne CYCLE_DELAY
     ret
+
+.globl CORE_ID
+CORE_ID:
+    mrs     x0, mpidr_el1
+    and     x0, x0, #3
+    ret
