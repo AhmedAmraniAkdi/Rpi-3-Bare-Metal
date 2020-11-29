@@ -47,6 +47,7 @@ typedef enum {
 } interrupt_regusters_qa7rev34_t;
 
 // not all of them
+// will prolly only end up using mailbox0 to communicate
 typedef enum {
     // bmc2837
     SYSTEM_TIMER_1 = 1,

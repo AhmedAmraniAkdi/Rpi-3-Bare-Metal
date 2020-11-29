@@ -49,6 +49,6 @@ CYCLE_DELAY:
 
 .globl CORE_ID
 CORE_ID:
-    mrs     x0, mpidr_el1
-    and     x0, x0, #3
+    mrs  x0, mpidr_el1
+    and  x0, x0, #3
     ret

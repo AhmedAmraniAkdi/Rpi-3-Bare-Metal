@@ -1,20 +1,23 @@
 .section ".text.boot"
 
 .global _start
-
 _start:
-    // read cpu id, stop slave cores
-    mrs     x1, mpidr_el1
-    and     x1, x1, #3
-    cbz     x1, 2f
-    // cpu id > 0, stop
-1:  wfe
-    b       1b
-2:  // cpu id == 0
+    // set up stacks
+    ldr     x2, =__stack_end_core0__			
+	mrs     x6, mpidr_el1						
+	ands    x6, x6, #0x3
+    cbz     x6, 1f						
+    ldr     x2, =__stack_end_core1__		
+	cmp     x6, #1								
+	beq     1f							
+    ldr     x2, = __stack_end_core2__			
+	cmp     x6, #2								
+	beq     1f							
+    ldr     x2, =__stack_end_core3__			
+1:
+	msr	    sp_el1, x2		
 
-    // set stack before our code
-    ldr     x1, =_start
-
+2:
     // set up EL1
     mrs     x0, CurrentEL
     and     x0, x0, #12 // clear reserved bits
@@ -31,10 +34,10 @@ _start:
     msr     elr_el3, x2
     eret
 
+5:
     // running at EL2?
-5:  cmp     x0, #4
+    cmp     x0, #4
     beq     5f
-    msr     sp_el1, x1
     // enable CNTP for EL1
     mrs     x0, cnthctl_el2
     orr     x0, x0, #3
@@ -64,12 +67,19 @@ _start:
     msr     elr_el2, x2
     eret
 
-5:  mov     sp, x1
+5:   
+    mrs     x1, mpidr_el1
+    and     x1, x1, #3
+    cbz     x1, 6f
+    // cpu id > 0, stop
+    bl WAIT_UNTIL_EVENT
 
+6:
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
-3:  cbz     w2, 4f
+3:  
+    cbz     w2, 4f
     str     xzr, [x1], #8
     sub     w2, w2, #1
     cbnz    w2, 3b
