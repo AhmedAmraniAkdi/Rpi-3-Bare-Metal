@@ -3,50 +3,63 @@
 #include "assert.h"
 #include "thread.h"
 #include "helper_macros.h"
+#include "interrupt.h"
 
-static int t_init;
-
-// sched init? main program thread?
-static struct task_struct main_task; // will be 0 initialized
-static struct task_struct *current = &main_task;
-static circularQ_t entry;
+static int t_init[CORE_NUM];
+static core_tasks_ctlr core_tasks[CORE_NUM] = {0};
 
 extern void ret_from_fork(void);
 extern void context_switch(struct task_struct* prev, struct task_struct* next);
 extern void enable_irq(void);
 extern void disable_irq(void);
+extern void WAIT_UNTIL_EVENT(void);
+extern WAKE_CORES(void);
 
-void thread_init(void){
-	node *temp = (node *) kmalloc(sizeof(node), 16);
-	temp->next = NULL;
-	temp->ptr = (uintptr_t) &main_task;
-	add_circular(&entry, temp);
-	t_init = 1;
+// needs change
+void threading_init(void){
+	int core = CODE_ID();
+	ENABLE_CORE_TIMER();
+	if(CODE_ID == 0){
+		PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&threading_init);
+		PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&threading_init);
+		PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&threading_init);
+		WAKE_CORES();
+	}
+	// something here to initialize the queues
 }
 
-void preempt_disable(void){
-	current->preempt_count = 1; 
+void preempt_disable(int core){
+	core_tasks[core].current->preempt_count = 1; 
 }
-void preempt_enable(void){
-	current->preempt_count = 0;
+void preempt_enable(int core){
+	core_tasks[core].current->preempt_count = 0;
 }
 
-// accepts as arguments a function pointer address and a pointer to the address of it argument, has to be a struct if many
-// the task_struct will be defined in main, that way we can still access it after freeing the thread alloc
-// also will pass the ret value if any as a pointer, will be defined in main
-// can't have the data in stack when it's freed
-void fork_task(struct task_struct *p, void (*fn)(void *, void *), void *arg, void *ret){
-	if(!t_init)
+// needs change
+// core0 forks the tasks for the other cores when starting
+struct task_struct* fork_task(core_number_t core, void (*fn)(void *, void *), void *arg, void *ret){
+	if(!t_init[core]) // no tasks yet, not even the init task
 		thread_init();
 
-	if(entry.ptr >= NR_TASKS)
+	if(core_tasks[core].tasks_num >= NR_TASKS)
 		panic("max threads reached");
 
-	preempt_disable();
+	preempt_disable(0); // forking will be done by core 0
 
-	p->stack_start = (uintptr_t) kmalloc(THREAD_SIZE, 16);
-	if (!p->stack_start)
-		panic("could not allocate thread stack for thread %d", entry.ptr);
+	struct task_struct *p = NULL;
+	int task_id = -1;
+	for(int i = 0; i < NR_TASKS; i++){ // there can be zombies in the slots, so need to go through all the array
+		if(core_tasks[core].tasks[i].state == TASK_ZOMBIE || core_tasks[core].tasks[i].state == TASK_EMPTY){ //current wont be chosen because it's RUNNING
+					p = &core_tasks[core].tasks[i];
+					p->task_id = i;
+					task_id = i;
+					break;
+				}
+	}
+
+	if(p == NULL || task_id == -1){
+		panic("could not find a slot for the task to fork core: %d function address: %x\n", core, fn);
+	}
 
 	p->state = TASK_READY;
 	p->preempt_count = 1; //disable preemtion until starting to execute thread
@@ -54,19 +67,22 @@ void fork_task(struct task_struct *p, void (*fn)(void *, void *), void *arg, voi
 	p->cpu_context.x20 = (uint64_t)arg;
 	p->cpu_context.x21 = (uint64_t)ret;
 	p->cpu_context.pc  = (uint64_t)ret_from_fork;
-	p->cpu_context.sp  = p->stack_start +  THREAD_SIZE;
+	uintptr_t stack_pointer = ((uintptr_t) &core_tasks[core].tasks[task_id].stack[8191]) - 16;
+	p->cpu_context.sp  = (uint64_t)pi_roundup(stack_pointer, 16); // this makes sure sp is aligned 16 and not cloberring the other stuff
 
-	// make node for circular list
-	node * temp = (node *) kmalloc(sizeof(node), 16);
-	temp->next = NULL;
-	temp->ptr = (uintptr_t) p;
-	
-	add_circular(&entry, temp);
-	preempt_enable();
+	// easiest : index the new p after the current task.
+	struct task_struct *q = core_tasks[core].current->next;
+	core_tasks[core].current->next = p;
+	p->next = q;
+
+	core_tasks[core].tasks_num++;
+	preempt_enable(0);
+	return p;
 }
 
 void scheduler_tick(void){
-    if (current->preempt_count != 0) {
+	unsigned core = CORE_ID();
+    if (core_tasks[core].current->preempt_count != 0) {
         return;
     }
 	// when entering exception, interrupts are disabled, but we enable them bcs we can have interrupts happen while scheduling
@@ -75,86 +91,67 @@ void scheduler_tick(void){
     disable_irq();
 }
 
-void timer_tick_clear(void){
- // does nothing, need to define it in main program
- // depends on which timer is used
-}
-
 void switch_to(struct task_struct * next) 
 {
-	if (current == next) 
+	unsigned core = CORE_ID();
+	if (core_tasks[core].current == next) 
 		return;
-	struct task_struct * prev = current;
-	current = next;
+	struct task_struct * prev = core_tasks[core].current;
+	core_tasks[core].current = next;
 	context_switch(prev, next);
 }
 
-
-//find next task that is ready
+//needs change
 void schedule(void){
-
-	if(entry.ptr == 1) // if only init task return
+	unsigned core = CORE_ID();
+	if(core_tasks[core].tasks_num == 1) // if only init task return
 		return;
 
-	preempt_disable();
-	node *temp = entry.next; 
-	struct task_struct *temp_ = NULL;
+	preempt_disable(core);
+	struct task_struct *temp = core_tasks[core].current->next; 
 
 	// current has state == running, won't get chosen in loop
 	int found = 0;
-	for(int i = 0; i < entry.ptr; i++, temp = temp->next){
-		temp_ = (struct task_struct *) temp->ptr;
-		if(temp_->state == TASK_READY){ // normally, the current task will be running, but when removing entry->next can not be running
+	while(temp != NULL){
+		if(temp->state == TASK_READY){ 
 			found  = 1;
 			break;
 		}
 	} 
 
 	if(!found){ // can just check if entry->next  == temp, but this is clearer
-		preempt_enable();
+		preempt_enable(core);
 		return;
 	}
 
 	// only possible states are zombie, ready and running for now
 	// have to change if adding TASK_WAITING
-	if(current->state != TASK_ZOMBIE)
-		current->state = TASK_READY;
-	temp_->state = TASK_RUNNING;
-	entry.next = temp; // move entry to new current
-	switch_to(temp_);
-	preempt_enable();
+	if(core_tasks[core].current->state != TASK_ZOMBIE)
+		core_tasks[core].current->state = TASK_READY;
+	temp->state = TASK_RUNNING;
+	switch_to(temp);
+	preempt_enable(core);
 }
 
-// force scheduling
-// funny idea, what happens when you yield yourself, lul
 void yield_task(void){
 	schedule();
 }
 
-// waits until a thread finishes
+// needs change
 void join_task(struct task_struct *p){
 	while(p->state != TASK_ZOMBIE)
 	 	yield_task();
 }
 
-//after the code of a task ends pc is sent here
+//needs change
 void exit_task(void){
-
-	preempt_disable();
-	current->state = TASK_ZOMBIE;
-	// we free the stack but still using it until scheduling, will be a problem? do i need ot make stack boundaries???
-	// what happens if scheduling happens right in this instant, and in the next task we allocate some memory? -> disable preemption
-	kfree((void *) current->stack_start);
-	node *temp = entry.next; // current node that points on current context struct
-	remove_circular(&entry, temp); // we remove it
-	// now:
-	//	entry points to the node that was after the one we removed
-	//	the struct pointed by the entry->next node is not the same as current
-	kfree(temp); // we free the node that points to current struct
-	schedule(); // if the node that was after was waiting/zombie, won't get chosen, if it was ready yes
-	// the miss alignement of entry->next->ptr and current doesn't affect
+	int core = CORE_ID();
+	preempt_disable(core);
+	core_tasks[core].current->state = TASK_ZOMBIE;
+	core_tasks[core].tasks_num--;
+	// no need to clean the struct because we can simply recycle it
+	schedule(); 
 	// after this the pc of current(the one zombified) will stop somewhere in context_switch and won't return ever
-
 }
 
 

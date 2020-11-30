@@ -42,4 +42,13 @@ void rpi_set_output(int (*putc_fp)(int), int (*puts_fp)(const char *));
 
 int printk(const char *format, ...);
 
+/********MISC**************/
+
+typedef enum{
+    CORE0 = 0,
+    CORE1 = 1,
+    CORE2 = 2,
+    CORE3 = 3,
+} core_number_t;
+
 #endif

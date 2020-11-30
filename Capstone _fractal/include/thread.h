@@ -2,15 +2,13 @@
 #define _THREAD_H
 #include <stdint.h>
 
-//#define THREAD_CPU_CONTEXT			0 		// offset of cpu_context in task_struct 
-
-#define THREAD_SIZE	4096
-#define NR_TASKS 64 
+#define NR_TASKS 8 
+#define CORE_NUM 4
 
 // will define more
-#define TASK_RUNNING 0
-#define TASK_WAITING 1
-#define TASK_READY   2
+#define TASK_EMPTY   0
+#define TASK_READY   1
+#define TASK_RUNNING 2
 #define TASK_ZOMBIE  3
 
 // callee registers, let'see, there are 2 types:
@@ -47,15 +45,30 @@ struct cpu_context {
 struct task_struct {
 	struct cpu_context cpu_context;
 	uint64_t stack_start;
-	uint8_t state;
-	uint8_t preempt_count; // 1 if executing critical stuff
+	int state;
+	int preempt_count; // 1 if executing critical stuff
+	// ok so since i don't want to make it harder by implementing condition variables
+	// when allocating stuff on the heap (could also give each core it heap)...
+	// I'll just give each task a stack of 8192 from the get go, no need to allocate anything
+	// with this i don't need linked lists nor kmalloc with this threading functions
+	char stack[8192];
+	// stack_start = &stack[127] - 16 + some rounding up to 16 alignement
+	// would be different if i didn't have 1GB memory laying around like nothing hahaha
+	struct task_struct *next; // points to the next task in line after current, can be zombie/ready
+	int task_id; // identifies the task with an ID
 };
 
-void thread_init(void);
+typedef struct core_tasks_ctrl{
+	struct task_struct tasks[NR_TASKS];
+	struct task_struct *current; // current running task
+	int initialized;
+	int tasks_num;
+} core_tasks_ctlr;
+
+void threading_init(void);
 void schedule(void);
 void scheduler_tick(void);
-void timer_tick_clear(void); // does nothing
-void fork_task(struct task_struct *p, void (fn)(void *, void*), void *arg, void *ret);
+struct task_struct* fork_task(core_number_t core, void (fn)(void *, void*), void *arg, void *ret);
 void yield_task(void);
 void join_task(struct task_struct *p);
 

@@ -85,12 +85,6 @@ typedef enum {
     MAILBOX3_CORE0 = 115,
 } irq_number_t;
 
-typedef enum{
-    CORE0 = 0,
-    CORE1 = 1,
-    CORE2 = 2,
-    CORE3 = 3,
-} core_number_t;
 
 typedef void (*interrupt_handler_f)(void);
 typedef void (*interrupt_clearer_f)(void);
@@ -98,6 +92,8 @@ typedef void (*interrupt_clearer_f)(void);
 extern void disable_irq(void);
 extern void enable_irq(void);
 extern void irq_vector_init(void);
+extern void ENABLE_CORE_TIMER(void);
+extern void SET_CORE_TIMER(uint32_t);
 
 void interrupt_init(void);
 void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_handler_f handler, interrupt_clearer_f clearer);
