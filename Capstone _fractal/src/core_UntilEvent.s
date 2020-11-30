@@ -10,8 +10,7 @@ WAIT_UNTIL_EVENT:
 	cbz w4, WAIT_UNTIL_EVENT   // If zero spinlock
 	str	w4, [x5, x6]		   // Write to Clear the read address	
     blr x4					   // Call address in x4 
-	b WAIT_UNTIL_EVENT		   // Loop back to spinlock
-    ret
+	b WAIT_UNTIL_EVENT		   // should not go back here, Loop back to spinlock
 
 .globl WAKE_CORES
 WAKE_CORES:

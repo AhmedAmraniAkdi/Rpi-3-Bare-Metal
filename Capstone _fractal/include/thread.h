@@ -2,7 +2,7 @@
 #define _THREAD_H
 #include <stdint.h>
 
-#define NR_TASKS 8 
+#define NR_TASKS 9 // 8 + 1 for main
 #define CORE_NUM 4
 
 // will define more
@@ -10,6 +10,8 @@
 #define TASK_READY   1
 #define TASK_RUNNING 2
 #define TASK_ZOMBIE  3
+
+#define TIMER_INT_PERIOD 10000 // 10ms
 
 // callee registers, let'see, there are 2 types:
 // caller: if you will use them after the function call, the caller saves them before calling and restores them after calling
@@ -61,7 +63,6 @@ struct task_struct {
 typedef struct core_tasks_ctrl{
 	struct task_struct tasks[NR_TASKS];
 	struct task_struct *current; // current running task
-	int initialized;
 	int tasks_num;
 } core_tasks_ctlr;
 

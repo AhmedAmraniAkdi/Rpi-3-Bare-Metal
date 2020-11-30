@@ -5,7 +5,7 @@
 #include "helper_macros.h"
 #include "interrupt.h"
 
-static int t_init[CORE_NUM];
+
 static core_tasks_ctlr core_tasks[CORE_NUM] = {0};
 
 extern void ret_from_fork(void);
@@ -15,7 +15,17 @@ extern void disable_irq(void);
 extern void WAIT_UNTIL_EVENT(void);
 extern WAKE_CORES(void);
 
-// needs change
+/* For cores 1, 2 and 3, this is how it goes
+*
+*                       start          +---->Thread_init
+*                         |            |          |
+*                        \|/           |          |
+*              +-->wait_until_event--->+          |
+*              |         \|/    /|\              \|/
+*              +----------+      +----------------+
+*
+*
+*/
 void threading_init(void){
 	int core = CODE_ID();
 	ENABLE_CORE_TIMER();
@@ -24,8 +34,32 @@ void threading_init(void){
 		PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&threading_init);
 		PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&threading_init);
 		WAKE_CORES();
+
+		//add main to tasks array
+		core_tasks[0].tasks_num++;
+		core_tasks[0].current = &core_tasks[0].tasks[0];
+		core_tasks[0].current->state = TASK_RUNNING;
+		core_tasks[0].current->task_id = 0;
+
+		SET_CORE_TIMER(TIMER_INT_PERIOD); //10 ms
+		return;
 	}
-	// something here to initialize the queues
+	// need to trick cores into thinking this is main
+	// after all tasks of the other cores are finished, jump to wait_until_event
+	// behaves like main -> need to join all other tasks of processor
+	// but we cant join, because this gets called before setting up any task (forking)
+	// unless we call this after forking all tasks
+
+	core_tasks[core].tasks_num++;
+	core_tasks[core].current = &core_tasks[0].tasks[0];
+	core_tasks[core].current->state = TASK_RUNNING;
+	core_tasks[core].current->task_id = 0;
+	SET_CORE_TIMER(TIMER_INT_PERIOD);
+
+	join_all_core_tasks();
+
+	core_tasks[core].tasks_num--;
+	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep", core);
 }
 
 void preempt_disable(int core){
@@ -38,9 +72,6 @@ void preempt_enable(int core){
 // needs change
 // core0 forks the tasks for the other cores when starting
 struct task_struct* fork_task(core_number_t core, void (*fn)(void *, void *), void *arg, void *ret){
-	if(!t_init[core]) // no tasks yet, not even the init task
-		thread_init();
-
 	if(core_tasks[core].tasks_num >= NR_TASKS)
 		panic("max threads reached");
 
@@ -48,7 +79,8 @@ struct task_struct* fork_task(core_number_t core, void (*fn)(void *, void *), vo
 
 	struct task_struct *p = NULL;
 	int task_id = -1;
-	for(int i = 0; i < NR_TASKS; i++){ // there can be zombies in the slots, so need to go through all the array
+	// i starts at 1, task 0 is always main
+	for(int i = 1; i < NR_TASKS; i++){ // there can be zombies in the slots, so need to go through all the array
 		if(core_tasks[core].tasks[i].state == TASK_ZOMBIE || core_tasks[core].tasks[i].state == TASK_EMPTY){ //current wont be chosen because it's RUNNING
 					p = &core_tasks[core].tasks[i];
 					p->task_id = i;
@@ -141,6 +173,13 @@ void yield_task(void){
 void join_task(struct task_struct *p){
 	while(p->state != TASK_ZOMBIE)
 	 	yield_task();
+}
+
+void join_all_core_tasks(void){
+	int core = CORE_ID();
+	while(core_tasks[core].tasks_num > 1){
+		schedule();
+	}
 }
 
 //needs change
