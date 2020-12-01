@@ -22,25 +22,25 @@ SECTIONS
     .stack_core0 : {
         . = ALIGN(16);				
         __stack_start_core0__ = .;
-        . = . + 4MB;
+        . = . + (1 << 22);
         __stack_end_core0__ = .;    
     }
 	.stack_core1 : {
         . = ALIGN(16);				
         __stack_start_core1__ = .;
-        . = . + 4MB;
+        . = . + (1 << 22);
         __stack_end_core1__ = .;     
     }
 	.stack_core2 :	{
         . = ALIGN(16);				
         __stack_start_core2__ = .;
-        . = . + 4MB;
+        . = . + (1 << 22);
         __stack_end_core2__ = .; 
     }
 	.stack_core3 :	{
         . = ALIGN(16);				
         __stack_start_core3__ = .;
-        . = . + 4MB;
+        . = . + (1 << 22);
         __stack_end_core3__ = .; 
     }
     . = ALIGN(4096);
@@ -48,9 +48,10 @@ SECTIONS
     .heap :	{
      	. = ALIGN(4096);
      	__heap_start__ = .;
-        . = . + 2MB;
+        . = . + (1 << 21);
         __heap_end = .;		
     	_end = .; PROVIDE (end = .);
 	}
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
+__bss_size = (__bss_end - __bss_start)>>3;

@@ -4,7 +4,7 @@
 #include "thread.h"
 #include "helper_macros.h"
 #include "interrupt.h"
-
+#include "mmu.h"
 
 static core_tasks_ctlr core_tasks[CORE_NUM] = {0};
 
@@ -13,54 +13,8 @@ extern void context_switch(struct task_struct* prev, struct task_struct* next);
 extern void enable_irq(void);
 extern void disable_irq(void);
 extern void WAIT_UNTIL_EVENT(void);
-extern WAKE_CORES(void);
+extern void WAKE_CORES(void);
 
-/* For cores 1, 2 and 3, this is how it goes
-*
-*                       start          +---->Thread_init
-*                         |            |          |
-*                        \|/           |          |
-*              +-->wait_until_event--->+          |
-*              |         \|/    /|\              \|/
-*              +----------+      +----------------+
-*
-*
-*/
-void threading_init(void){
-	int core = CODE_ID();
-	ENABLE_CORE_TIMER();
-	if(CODE_ID == 0){
-		PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&threading_init);
-		PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&threading_init);
-		PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&threading_init);
-		WAKE_CORES();
-
-		//add main to tasks array
-		core_tasks[0].tasks_num++;
-		core_tasks[0].current = &core_tasks[0].tasks[0];
-		core_tasks[0].current->state = TASK_RUNNING;
-		core_tasks[0].current->task_id = 0;
-
-		SET_CORE_TIMER(TIMER_INT_PERIOD); //10 ms
-		return;
-	}
-	// need to trick cores into thinking this is main
-	// after all tasks of the other cores are finished, jump to wait_until_event
-	// behaves like main -> need to join all other tasks of processor
-	// but we cant join, because this gets called before setting up any task (forking)
-	// unless we call this after forking all tasks
-
-	core_tasks[core].tasks_num++;
-	core_tasks[core].current = &core_tasks[0].tasks[0];
-	core_tasks[core].current->state = TASK_RUNNING;
-	core_tasks[core].current->task_id = 0;
-	SET_CORE_TIMER(TIMER_INT_PERIOD);
-
-	join_all_core_tasks();
-
-	core_tasks[core].tasks_num--;
-	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep", core);
-}
 
 void preempt_disable(int core){
 	core_tasks[core].current->preempt_count = 1; 
@@ -182,6 +136,56 @@ void join_all_core_tasks(void){
 	}
 }
 
+/* For cores 1, 2 and 3, this is how it goes
+*
+*                       start          +---->Thread_init
+*                         |            |          |
+*                        \|/           |          |
+*              +-->wait_until_event--->+          |
+*              |         \|/    /|\              \|/
+*              +----------+      +----------------+
+*
+*
+*/
+void threading_init(void){
+	int core = CORE_ID();
+	ENABLE_CORE_TIMER();
+	if(core == 0){
+		PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&threading_init);
+		PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&threading_init);
+		PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&threading_init);
+		WAKE_CORES();
+
+		//add main to tasks array
+		core_tasks[0].tasks_num++;
+		core_tasks[0].current = &core_tasks[0].tasks[0];
+		core_tasks[0].current->state = TASK_RUNNING;
+		core_tasks[0].current->task_id = 0;
+
+		SET_CORE_TIMER(TIMER_INT_PERIOD); //10 ms
+		return;
+	}
+	// need to trick cores into thinking this is main
+	// after all tasks of the other cores are finished, jump to wait_until_event
+	// behaves like main -> need to join all other tasks of processor
+	// but we cant join, because this gets called before setting up any task (forking)
+	// unless we call this after forking all tasks
+	if(!is_mmu_enabled(core)){ // means first time here: we enable mmu and interrupts
+		mmu_enable();
+		enable_irq();
+	}
+	core_tasks[core].tasks_num++;
+	core_tasks[core].current = &core_tasks[0].tasks[0];
+	core_tasks[core].current->state = TASK_RUNNING;
+	core_tasks[core].current->task_id = 0;
+	SET_CORE_TIMER(TIMER_INT_PERIOD);
+
+	join_all_core_tasks();
+
+	core_tasks[core].tasks_num--;
+	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep", core);
+}
+
 //needs change
 void exit_task(void){
 	int core = CORE_ID();
@@ -192,5 +196,3 @@ void exit_task(void){
 	schedule(); 
 	// after this the pc of current(the one zombified) will stop somewhere in context_switch and won't return ever
 }
-
-

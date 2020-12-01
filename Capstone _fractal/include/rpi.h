@@ -25,6 +25,11 @@ extern uint32_t CORE_ID(void);
 void reboot(void);
 void clean_reboot(void);
 
+void delay(unsigned ticks);
+unsigned timer_get_time(void);
+void delay_us(unsigned us);
+void delay_ms(unsigned ms);
+
 /************DEBUGGING***********/
 // Took these from https://github.com/dddrrreee/cs140e-20win/tree/master/libpi
 // will be helpful

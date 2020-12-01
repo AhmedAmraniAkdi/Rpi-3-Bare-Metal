@@ -74,6 +74,13 @@
 #include "VCmailbox.c"
 #include <stdint.h>
 
+static int mmu_enabled[4] = {0};
+static int populated = 0;
+
+int is_mmu_enabled(int core){
+    return mmu_enabled[core];
+}
+
 // need alignement, address is at 12th bit
 static uint64_t __attribute__((aligned(4096))) L2_table[1024] = {0};
 static uint64_t __attribute__((aligned(4096))) L1_table[2] = {0};
@@ -137,5 +144,9 @@ void populate_tables(void){
 extern void enable_mmu_tables(uint64_t *table_entry);
 
 void mmu_enable(void){
+    if(!populated)
+        populate_tables();
+    int core = CORE_ID();
 	enable_mmu_tables(&L1_table[0]);
+    mmu_enabled[core] = 1;
 }

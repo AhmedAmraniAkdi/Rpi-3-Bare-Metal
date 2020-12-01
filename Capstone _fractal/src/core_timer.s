@@ -11,5 +11,6 @@ SET_CORE_TIMER:
 
 .globl ENABLE_CORE_TIMER
 ENABLE_CORE_TIMER:
-	msr CNTP_CTL_EL0, #1  // Enable EL1 physical timer
+	mov x0, #1
+	msr CNTP_CTL_EL0, x0  // Enable EL1 physical timer
 	ret						 

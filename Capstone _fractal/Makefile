@@ -4,7 +4,8 @@ LIBPI = src
 LIBPI_HEADERS = include
 CFLAGS = -I$(LIBPI_HEADERS) -I. -Wall  -Wno-unused-function -O2 -nostdlib -nostartfiles -ffreestanding 
 
-SRC = fractal_parallel_intrinsics.c
+#SRC = fractal_parallel_intrinsics.c
+SRC = test_multicore_scheduling_interrupts.c
 OBJS = $(SRC:.c=.o)
 
 all : libpi kernel8.img 

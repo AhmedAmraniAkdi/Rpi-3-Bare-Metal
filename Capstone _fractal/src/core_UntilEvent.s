@@ -5,7 +5,7 @@ WAIT_UNTIL_EVENT:
 	movk x5, #0x4000, lsl #16  // Load mailbox0 read address = 0x400000C0
 	mrs x6, MPIDR_EL1		   // Fetch core Id
 	and x6, x6, #0x3		   // Create 2 bit mask of core Id
-	lsr x6, #4                 // core_id *= 16
+	mov x6, x6, lsl #4         // core_id *= 16
 	ldr w4, [x5, x6]		   // Read the mailbox
 	cbz w4, WAIT_UNTIL_EVENT   // If zero spinlock
 	str	w4, [x5, x6]		   // Write to Clear the read address	

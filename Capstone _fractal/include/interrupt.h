@@ -18,6 +18,8 @@
 // only irq
 #define NUM_IRQS (72 + 12 * 4)
 
+#define TIMER_INT_PERIOD 1000 // 1s
+
 typedef enum {
     IRQ_BASIC_PENDING = 0x3F00B200,
     IRQ_GPU_PENDING1  = 0x3F00B204,
@@ -59,30 +61,30 @@ typedef enum {
     UART_INT       = 57,
     ARM_TIMER      = 64,
     // qa7rev
-    CNTPSIRQ_CORE0 = 72, // per core physical timer (secure physical timer)
+    bTIMER_CORE0   = 72, // per core physical timer (secure physical timer)
     MAILBOX0_CORE0 = 76,
     MAILBOX1_CORE0 = 77,
     MAILBOX2_CORE0 = 78,
     MAILBOX3_CORE0 = 79,
     LOCAL_TIMER    = 83, // will always be routed to core 0
 
-    CNTPSIRQ_CORE1 = 84,
+    bTIMER_CORE1   = 84,
     MAILBOX0_CORE1 = 88,
     MAILBOX1_CORE1 = 89,
     MAILBOX2_CORE1 = 90,
     MAILBOX3_CORE1 = 91,
 
-    CNTPSIRQ_CORE2 = 96,
+    bTIMER_CORE2   = 96,
     MAILBOX0_CORE2 = 100,
     MAILBOX1_CORE2 = 101,
     MAILBOX2_CORE2 = 102,
     MAILBOX3_CORE2 = 103,
 
-    CNTPSIRQ_CORE3 = 108,
-    MAILBOX0_CORE0 = 112,
-    MAILBOX1_CORE0 = 113,
-    MAILBOX2_CORE0 = 114,
-    MAILBOX3_CORE0 = 115,
+    bTIMER_CORE3   = 108,
+    MAILBOX0_CORE3 = 112,
+    MAILBOX1_CORE3 = 113,
+    MAILBOX2_CORE3 = 114,
+    MAILBOX3_CORE3 = 115,
 } irq_number_t;
 
 
@@ -94,6 +96,8 @@ extern void enable_irq(void);
 extern void irq_vector_init(void);
 extern void ENABLE_CORE_TIMER(void);
 extern void SET_CORE_TIMER(uint32_t);
+
+void core_timer_clearer(void);
 
 void interrupt_init(void);
 void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_handler_f handler, interrupt_clearer_f clearer);

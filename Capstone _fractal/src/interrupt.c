@@ -35,7 +35,8 @@ const char *entry_error_messages[] = {
 };
 
 void show_invalid_entry_message(int type, uint64_t esr, uint64_t address){
-	printk("\n%s, ESR: %x, address: %x\r\n", entry_error_messages[type], esr, address);
+    int core = CORE_ID();
+	printk("\nCore: %d, %s, ESR: %x, address: %x\r\n", core, entry_error_messages[type], esr, address);
     printk("ESR decoding: \n");
     // decode exception type
     switch(esr>>26) {
@@ -108,17 +109,16 @@ int is_pending(irq_number_t irq_num){
 }
 
 void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_handler_f handler, interrupt_clearer_f clearer){
-    uint32_t irq_pos = 0;
+    int irq_pos = -1;
     if (IRQ_IS_ARM_CONTROL(irq_num)){
         // core 0 will set up these
         handlers[irq_num] = handler;
         clearers[irq_num] = clearer;
 
-        uint32_t irq_ctrl_register; //qa7 has separate registers
-
+        uint32_t irq_ctrl_register = 0xFFFFFFFF; //qa7 has separate registers
+        irq_pos = irq_num - (72 + 12 * core);
         if(irq_pos < 4){
             irq_ctrl_register = CORE_TIMER_INTERRUPT_CTRL + 4 * core;
-            irq_pos = irq_num - (72 + 12 * core);
         }
         else if (irq_pos == 11){
             irq_ctrl_register = LOCAL_TIMER_CONTROL;
@@ -130,6 +130,7 @@ void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_ha
             // irq_pos = 3 which is correct
             irq_pos = irq_num - (72 + 12 * core) - 4;
         }
+        demand(irq_pos != -1 || irq_ctrl_register == 0xFFFFFFFF, "could not unregister irq handler");
         uint32_t r = GET32(irq_ctrl_register);
         PUT32(irq_ctrl_register, r | (1 << irq_pos));
     } 
@@ -163,17 +164,16 @@ void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_ha
 }
 
 void unregister_irq_handler(irq_number_t irq_num, core_number_t core){
-    uint32_t irq_pos;
+    int irq_pos = -1;
     if (IRQ_IS_ARM_CONTROL(irq_num)){
         // core 0 will clear up these
         handlers[irq_num] = 0;
         clearers[irq_num] = 0;
 
-        uint32_t irq_ctrl_register; //qa7 has separate registers
-
+        uint32_t irq_ctrl_register = 0xFFFFFFFF; //qa7 has separate registers
+        irq_pos = irq_num - (72 + 12 * core);
         if(irq_pos < 4){
-            irq_ctrl_register = CORE_TIMER_INTERRUPT_CTRL + 4 * core;
-            irq_pos = irq_num - (72 + 12 * core);
+            irq_ctrl_register = CORE_TIMER_INTERRUPT_CTRL + 4 * core;   
         }
         else if (irq_pos == 11){
             irq_ctrl_register = LOCAL_TIMER_CONTROL;
@@ -186,6 +186,7 @@ void unregister_irq_handler(irq_number_t irq_num, core_number_t core){
             irq_pos = irq_num - (72 + 12 * core) - 4;
         }
         uint32_t r = GET32(irq_ctrl_register);
+        demand(irq_pos != -1 || irq_ctrl_register == 0xFFFFFFFF, "could not unregister irq handler");
         PUT32(irq_ctrl_register, r & ~(1 << irq_pos));
     }
     else if (IRQ_IS_BASIC(irq_num)) {
@@ -233,9 +234,15 @@ void irq_handler(void) {
 	for (int j = start; j < end; j++) {
         if (is_pending(j)  && (handlers[j] != 0)) {
             DSB();
+            printk("\nbeeboop\n");
 		    clearers[j]();
 		    handlers[j]();
             DSB();
         }
     }
+}
+
+
+void core_timer_clearer(void){
+	SET_CORE_TIMER(TIMER_INT_PERIOD);
 }

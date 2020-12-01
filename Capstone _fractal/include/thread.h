@@ -11,7 +11,7 @@
 #define TASK_RUNNING 2
 #define TASK_ZOMBIE  3
 
-#define TIMER_INT_PERIOD 10000 // 10ms
+
 
 // callee registers, let'see, there are 2 types:
 // caller: if you will use them after the function call, the caller saves them before calling and restores them after calling

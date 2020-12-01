@@ -17,7 +17,7 @@ TARGET = libpi.a
 all : $(TARGET) 
 
 %.o:%.S
-	$(CC) $(ASFLAGS) -c $< -o $@
+	$(CC) -I$(HEADERS) -I. $(ASFLAGS) -c $< -o $@
 
 %.o:%.s
 	$(AS) $(ASFLAGS) $< -o $@ 
