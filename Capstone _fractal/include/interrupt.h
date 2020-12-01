@@ -96,6 +96,8 @@ extern void enable_irq(void);
 extern void irq_vector_init(void);
 extern void ENABLE_CORE_TIMER(void);
 extern void SET_CORE_TIMER(uint32_t);
+extern uint64_t READ_TIMER_FREQ(void);
+extern uint64_t READ_TIMER(void);
 
 void core_timer_clearer(void);
 

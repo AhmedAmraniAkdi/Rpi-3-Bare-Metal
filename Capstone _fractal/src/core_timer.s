@@ -13,4 +13,14 @@ SET_CORE_TIMER:
 ENABLE_CORE_TIMER:
 	mov x0, #1
 	msr CNTP_CTL_EL0, x0  // Enable EL1 physical timer
-	ret						 
+	ret		
+
+.globl READ_TIMER_FREQ
+READ_TIMER_FREQ:
+    mrs x0, CNTFRQ_EL0
+    ret
+
+.globl READ_TIMER
+READ_TIMER:
+    mrs x0, CNTPCT_EL0
+    ret				 

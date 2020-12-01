@@ -72,7 +72,7 @@ _start:
     and     x1, x1, #3
     cbz     x1, 6f
     // cpu id > 0, stop
-    bl WAIT_UNTIL_EVENT
+    bl start_sleep
 
 6:
     // clear bss
@@ -84,7 +84,29 @@ _start:
     sub     w2, w2, #1
     cbnz    w2, 3b
 
+9:
+    // set up entry point for other cores, they sleeping
+    ldr     w2, =_start
+    mov     x0, #0xE0					
+    str     w2, [x0]
+	str     w2, [x0, #0x8]							
+	str     w2, [x0, #0x10]				
+    sev
     // jump to C code, should not return
 4:  bl      notmain
     // for failsafe, halt this core too
     b       1b
+
+start_sleep:  // cleans mailboxes      
+    mov	x5, #0xC0                
+	movk x5, #0x4000, lsl #16  // Load mailbox0 read address = 0x400000C0
+	mrs x6, MPIDR_EL1		   // Fetch core Id
+	and x6, x6, #0x3		   // Create 2 bit mask of core Id
+	mov x6, x6, lsl #4         // core_id *= 16
+	ldr w4, [x5, x6]		   // Read the mailbox
+	str	w4, [x5, x6]
+    b WAIT_UNTIL_EVENT
+
+
+
+

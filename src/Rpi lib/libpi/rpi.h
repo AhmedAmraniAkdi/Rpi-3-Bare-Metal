@@ -19,6 +19,7 @@ extern uint64_t GETEL(void);
 extern void DSB(void);
 extern void DMB(void);
 extern void ISB(void);
+extern int CORE_ID(void);
 
 void reboot(void);
 void clean_reboot(void);

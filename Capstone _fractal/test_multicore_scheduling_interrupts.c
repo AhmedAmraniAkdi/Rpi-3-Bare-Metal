@@ -17,14 +17,14 @@
 #include "VCmailbox.h"
 #include "helper_macros.h"
 
-static int a0 = 0; 
-static int a1 = 0; // core 0
-static int b0 = 0; 
-static int b1 = 0; // core 1
-static int c0 = 0; 
-static int c1 = 0; // core 2
-static int d0 = 0; 
-static int d1 = 0; // core 3
+static volatile int a0 = 0; 
+static volatile int a1 = 0; // core 0
+static volatile int b0 = 0; 
+static volatile int b1 = 0; // core 1
+static volatile int c0 = 0; 
+static volatile int c1 = 0; // core 2
+static volatile int d0 = 0; 
+static volatile int d1 = 0; // core 3
 
 void task00(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
@@ -102,14 +102,14 @@ int notmain(void){
     fork_task(CORE0, &task00, NULL, NULL);
     fork_task(CORE0, &task01, NULL, NULL);
 
-    /*fork_task(CORE1, &task10, NULL, NULL);
+    fork_task(CORE1, &task10, NULL, NULL);
     fork_task(CORE1, &task11, NULL, NULL);
 
     fork_task(CORE2, &task20, NULL, NULL);
     fork_task(CORE2, &task21, NULL, NULL);
 
     fork_task(CORE3, &task30, NULL, NULL);
-    fork_task(CORE3, &task31, NULL, NULL);*/
+    fork_task(CORE3, &task31, NULL, NULL);
 
     threading_init(); 
 

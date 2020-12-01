@@ -17,3 +17,4 @@ WAKE_CORES:
     dmb sy
     sev
     ret
+
