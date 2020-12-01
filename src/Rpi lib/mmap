@@ -1,4 +1,4 @@
-SECTIONS
+/*SECTIONS
 {
     . = 0x80000;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
@@ -18,4 +18,62 @@ SECTIONS
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
-__heap_end = (__heap_start + 0x100000);
+__heap_end = (__heap_start + 0x100000);*/
+
+SECTIONS
+{
+    . = 0x80000;
+    .text : { 
+        KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) 
+    }
+    .rodata : { 
+        *(.rodata .rodata.* .gnu.linkonce.r*) 
+    }
+    . = ALIGN(4096);
+    PROVIDE(_data = .);
+    .data : { 
+        *(.data .data.* .gnu.linkonce.d*) 
+    }
+    .bss (NOLOAD) : {
+        . = ALIGN(16);
+        __bss_start = .;
+        *(.bss .bss.*)
+        *(COMMON)
+        __bss_end = .;
+    }
+    .stack_core0 : {
+        . = ALIGN(16);				
+        __stack_start_core0__ = .;
+        . = . + (1 << 22);
+        __stack_end_core0__ = .;    
+    }
+	.stack_core1 : {
+        . = ALIGN(16);				
+        __stack_start_core1__ = .;
+        . = . + (1 << 22);
+        __stack_end_core1__ = .;     
+    }
+	.stack_core2 :	{
+        . = ALIGN(16);				
+        __stack_start_core2__ = .;
+        . = . + (1 << 22);
+        __stack_end_core2__ = .; 
+    }
+	.stack_core3 :	{
+        . = ALIGN(16);				
+        __stack_start_core3__ = .;
+        . = . + (1 << 22);
+        __stack_end_core3__ = .; 
+    }
+    . = ALIGN(4096);
+    __heap_start = .;
+    .heap :	{
+     	. = ALIGN(4096);
+     	__heap_start__ = .;
+        . = . + (1 << 21);
+        __heap_end = .;		
+    	_end = .; PROVIDE (end = .);
+	}
+   /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
+}
+__bss_size = (__bss_end - __bss_start)>>3;

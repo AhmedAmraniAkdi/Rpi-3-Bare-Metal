@@ -3,6 +3,10 @@
 // and then core 0, task 1 will be printing it.
 // this will test threadidng/interrupts/timer
 
+// the good thing? i have an entire folder on src where everything works
+// so i can easily test little by little by replacing the code
+// should work
+
 #include "rpi.h"
 #include "interrupt.h"
 #include "thread.h"
