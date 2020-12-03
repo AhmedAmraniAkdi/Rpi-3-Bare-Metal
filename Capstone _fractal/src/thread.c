@@ -162,7 +162,7 @@ void secondary_cores_threading_init(void){
 		mmu_enable();
 		enable_irq();
 	}
-	if(core_tasks[core].tasks_num != 0){
+	if(core_tasks[core].tasks_num > 0){
 	
 	core_tasks[core].tasks_num++;
 	struct task_struct *temp = core_tasks[core].current;
@@ -188,19 +188,18 @@ void secondary_cores_threading_init(void){
 	/*if(core == 3){
 		printk("secondaryinit after join %d\n", core_tasks[core].tasks_num);
 	}*/
-
-	DISABLE_CORE_TIMER();
 	
 	core_tasks[core].tasks_num--;
 	}
+	DISABLE_CORE_TIMER();
 	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep, num of tasks %d", core, core_tasks[core].tasks_num);
 }
 
 void threading_init(void){
 	ENABLE_CORE_TIMER();
 
-	//PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&secondary_cores_threading_init);
-	//PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&secondary_cores_threading_init);
+	PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&secondary_cores_threading_init);
+	PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&secondary_cores_threading_init);
 	PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&secondary_cores_threading_init);
 	WAKE_CORES();
 

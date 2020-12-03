@@ -139,6 +139,7 @@ void populate_tables(void){
 
     // and that's it
     // won't do virtualization so no need for virtual allocation, or another set of virtual tables for TTBRL1
+    populated = 1;
 }
 
 extern void enable_mmu_tables(uint64_t *table_entry);
