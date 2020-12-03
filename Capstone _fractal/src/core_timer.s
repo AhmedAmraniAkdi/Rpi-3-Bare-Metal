@@ -24,3 +24,9 @@ READ_TIMER_FREQ:
 READ_TIMER:
     mrs x0, CNTPCT_EL0
     ret				 
+
+.globl DISABLE_CORE_TIMER
+DISABLE_CORE_TIMER:
+	mov x0, #0
+	msr CNTP_CTL_EL0, x0  // DIsable EL1 physical timer
+	ret	

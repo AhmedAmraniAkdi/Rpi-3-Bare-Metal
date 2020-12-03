@@ -69,15 +69,13 @@ void show_invalid_entry_message(int type, uint64_t esr, uint64_t address){
             case 3: printk(" at level 3"); break;
         }
     }
-
+    printk("\n");
     panic("\nShutting down");
 }
 
 // irqs will be enabled when registering the handlers
 void interrupt_init(void){
     PUT32(IRQ_BASIC_DISABLE, 0xFFFFFFFF);
-    PUT32(IRQ_GPU_DISABLE1, 0xFFFFFFFF);
-    PUT32(IRQ_GPU_DISABLE2, 0xFFFFFFFF);
     PUT32(GPU_ROUTING_INTERRUPT, 0x0);
     PUT32(LOCAL_TIMER_ROUTING, 0x0);
     for(int i = 0; i < 4; i++){
@@ -96,15 +94,12 @@ int is_pending(irq_number_t irq_num){
         arm_control = ((1 << (irq_num - (72 + 12 * core_id))) & GET32(CORE_INTERRUPT_IRQ_SOURCE + 4 * core_id));
         return arm_control;
     } else {
-        unsigned basic = 0, gpu1 = 0, gpu2 = 0, arm_control = 0;
+        unsigned basic = 0, arm_control = 0;
 
         basic = IRQ_IS_BASIC(irq_num) && ((1 << (irq_num - 64)) & GET32(IRQ_BASIC_PENDING));
-        gpu1  = IRQ_IS_GPU2(irq_num) && ((1 << (irq_num - 32)) & GET32(IRQ_GPU_PENDING2));
-        gpu2  = IRQ_IS_GPU1(irq_num) && ((1 << (irq_num)) & GET32(IRQ_GPU_PENDING1));
     
         arm_control = IRQ_IS_ARM_CONTROL(irq_num) && ( (1 << (irq_num - 72)) & GET32(CORE_INTERRUPT_IRQ_SOURCE));
-    
-        return (basic || gpu1 || gpu2 || arm_control);
+        return (basic || arm_control);
     }
 }
 
@@ -140,20 +135,6 @@ void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_ha
 	    clearers[irq_num] = clearer;
         uint32_t r = GET32(IRQ_BASIC_ENABLE);
         PUT32(IRQ_BASIC_ENABLE, r | (1 << irq_pos));
-    }
-    else if (IRQ_IS_GPU2(irq_num)) {
-        irq_pos = irq_num - 32;
-        handlers[irq_num] = handler;
-	    clearers[irq_num] = clearer;
-        uint32_t r = GET32(IRQ_GPU_ENABLE2);
-        PUT32(IRQ_GPU_ENABLE2, r | (1 << irq_pos));
-    }
-    else if (IRQ_IS_GPU1(irq_num)) {
-        irq_pos = irq_num;
-        handlers[irq_num] = handler;
-	    clearers[irq_num] = clearer;
-        uint32_t r = GET32(IRQ_GPU_ENABLE1);
-        PUT32(IRQ_GPU_ENABLE1, r | (1 << irq_pos));
     }
     else {
         panic("ERROR: CANNOT REGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
@@ -196,20 +177,6 @@ void unregister_irq_handler(irq_number_t irq_num, core_number_t core){
         uint32_t r = GET32(IRQ_BASIC_DISABLE);
         PUT32(IRQ_BASIC_DISABLE, r | (1 << irq_pos));
     }
-    else if (IRQ_IS_GPU2(irq_num)) {
-        irq_pos = irq_num - 32;
-        handlers[irq_num] = 0;
-        clearers[irq_num] = 0;
-        uint32_t r = GET32(IRQ_GPU_DISABLE2);
-        PUT32(IRQ_GPU_DISABLE2, r | (1 << irq_pos));
-    }
-    else if (IRQ_IS_GPU1(irq_num)) {
-        irq_pos = irq_num;
-        handlers[irq_num] = 0;
-        clearers[irq_num] = 0;
-        uint32_t r = GET32(IRQ_GPU_DISABLE1);
-        PUT32(IRQ_GPU_DISABLE1, r | (1 << irq_pos));
-    } 
     else {
         panic("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
     }
@@ -234,14 +201,12 @@ void irq_handler(void) {
 	for (int j = start; j < end; j++) {
         if (is_pending(j)  && (handlers[j] != 0)) {
             DSB();
-            printk("\nbeeboop\n");
 		    clearers[j]();
 		    handlers[j]();
             DSB();
         }
     }
 }
-
 
 void core_timer_clearer(void){
 	SET_CORE_TIMER(TIMER_INT_PERIOD);

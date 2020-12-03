@@ -18,7 +18,7 @@
 // only irq
 #define NUM_IRQS (72 + 12 * 4)
 
-#define TIMER_INT_PERIOD 1000 // 1s
+#define TIMER_INT_PERIOD (READ_TIMER_FREQ()/1)
 
 typedef enum {
     IRQ_BASIC_PENDING = 0x3F00B200,
@@ -53,34 +53,28 @@ typedef enum {
 typedef enum {
     // bmc2837
     SYSTEM_TIMER_1 = 1,
-    USB_CONTROLER  = 9,
-    GPIO_INT0      = 49,
-    GPIO_INT1      = 50,
-    GPIO_INT2      = 51,
-    GPIO_INT3      = 52,
-    UART_INT       = 57,
     ARM_TIMER      = 64,
     // qa7rev
-    bTIMER_CORE0   = 72, // per core physical timer (secure physical timer)
+    bTIMER_CORE0   = 73, // per core physical timer (non secure physical timer)
     MAILBOX0_CORE0 = 76,
     MAILBOX1_CORE0 = 77,
     MAILBOX2_CORE0 = 78,
     MAILBOX3_CORE0 = 79,
     LOCAL_TIMER    = 83, // will always be routed to core 0
 
-    bTIMER_CORE1   = 84,
+    bTIMER_CORE1   = 85,
     MAILBOX0_CORE1 = 88,
     MAILBOX1_CORE1 = 89,
     MAILBOX2_CORE1 = 90,
     MAILBOX3_CORE1 = 91,
 
-    bTIMER_CORE2   = 96,
+    bTIMER_CORE2   = 97,
     MAILBOX0_CORE2 = 100,
     MAILBOX1_CORE2 = 101,
     MAILBOX2_CORE2 = 102,
     MAILBOX3_CORE2 = 103,
 
-    bTIMER_CORE3   = 108,
+    bTIMER_CORE3   = 109,
     MAILBOX0_CORE3 = 112,
     MAILBOX1_CORE3 = 113,
     MAILBOX2_CORE3 = 114,
@@ -98,6 +92,7 @@ extern void ENABLE_CORE_TIMER(void);
 extern void SET_CORE_TIMER(uint32_t);
 extern uint64_t READ_TIMER_FREQ(void);
 extern uint64_t READ_TIMER(void);
+extern void DISABLE_CORE_TIMER(void);
 
 void core_timer_clearer(void);
 
