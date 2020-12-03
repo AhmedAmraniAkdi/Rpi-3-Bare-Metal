@@ -1,4 +1,5 @@
 #include "rpi.h"
+#include "interrupt.h"
 
 void delay(unsigned ticks) {
         CYCLE_DELAY(ticks);
@@ -21,6 +22,14 @@ void delay_us(unsigned us) {
 
 void delay_ms(unsigned ms) {
 	delay_us(ms*1000);
+}
+
+void delay_core_timer(unsigned divisor){
+    uint64_t t = READ_TIMER();
+    uint64_t f = READ_TIMER_FREQ();
+    while(1){
+        if((READ_TIMER() - t) > (f/divisor)) break;
+    }
 }
 
 // not finding much documentation

@@ -29,6 +29,7 @@ void delay(unsigned ticks);
 unsigned timer_get_time(void);
 void delay_us(unsigned us);
 void delay_ms(unsigned ms);
+void delay_core_timer(unsigned divisor);
 
 /************DEBUGGING***********/
 // Took these from https://github.com/dddrrreee/cs140e-20win/tree/master/libpi

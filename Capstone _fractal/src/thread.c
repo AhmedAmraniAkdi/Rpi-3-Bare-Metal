@@ -133,34 +133,7 @@ void join_all_core_tasks(void){
 	}
 }
 
-void threading_init(void){
-	unsigned core = CORE_ID();
-	ENABLE_CORE_TIMER();
 
-	PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&secondary_cores_threading_init);
-	PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&secondary_cores_threading_init);
-	PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&secondary_cores_threading_init);
-	WAKE_CORES();
-
-	//add main to tasks array
-	if(!initialized){
-	core_tasks[0].tasks_num++;
-	struct task_struct *temp = core_tasks[0].current;
-	core_tasks[0].current = &core_tasks[0].tasks[0];
-	core_tasks[0].current->next = temp;
-	core_tasks[0].current->state = TASK_RUNNING;
-	initialized = 1;
-	}
-
-	//close list
-	struct task_struct *q = core_tasks[0].current;
-	while(q->next){
-		q = q->next;
-	}
-	q->next = core_tasks[0].current;
-
-	SET_CORE_TIMER(TIMER_INT_PERIOD);
-}
 
 void secondary_cores_threading_init(void){
 	unsigned core = CORE_ID();
@@ -192,6 +165,34 @@ void secondary_cores_threading_init(void){
 	core_tasks[core].tasks_num--;
 	}
 	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep", core);
+}
+
+void threading_init(void){
+	ENABLE_CORE_TIMER();
+
+	PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&secondary_cores_threading_init);
+	PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&secondary_cores_threading_init);
+	PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&secondary_cores_threading_init);
+	WAKE_CORES();
+
+	//add main to tasks array
+	if(!initialized){
+	core_tasks[0].tasks_num++;
+	struct task_struct *temp = core_tasks[0].current;
+	core_tasks[0].current = &core_tasks[0].tasks[0];
+	core_tasks[0].current->next = temp;
+	core_tasks[0].current->state = TASK_RUNNING;
+	initialized = 1;
+	}
+
+	//close list
+	struct task_struct *q = core_tasks[0].current;
+	while(q->next){
+		q = q->next;
+	}
+	q->next = core_tasks[0].current;
+
+	SET_CORE_TIMER(TIMER_INT_PERIOD);
 }
 
 void exit_task(void){
