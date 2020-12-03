@@ -39,7 +39,7 @@ void task01(void *arg, void *ret){
         a1++;
     }
 }
-
+/*
 void task10(void *arg, void *ret){
     while(1){
         delay_core_timer(10);
@@ -66,13 +66,13 @@ void task21(void *arg, void *ret){
         delay_core_timer(10);
         c1++;
     }
-}
+}*/
 
 void task30(void *arg, void *ret){
     while(1){
         delay_core_timer(10);
         d0++;
-        if(d0 > 60) break;
+        if(d0 > 15) break;
     }
 }
 
@@ -80,7 +80,7 @@ void task31(void *arg, void *ret){
     while(1){
         delay_core_timer(10);
         d1++;
-        if(d1 > 120) break;
+        if(d1 > 35) break;
     }
 }
 
@@ -95,8 +95,8 @@ int notmain(void){
     printk("early cnfiguration done\n");
 
     register_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
-    register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
-    register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
+    //register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
+    //register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
     register_irq_handler(bTIMER_CORE3, CORE3, &scheduler_tick, &core_timer_clearer);
 
     printk("registered all irq handlers for all 4 cores\n");
@@ -104,11 +104,11 @@ int notmain(void){
     fork_task(CORE0, &task00, NULL, NULL);
     fork_task(CORE0, &task01, NULL, NULL);
 
-    fork_task(CORE1, &task10, NULL, NULL);
+    /*fork_task(CORE1, &task10, NULL, NULL);
     fork_task(CORE1, &task11, NULL, NULL);
 
     fork_task(CORE2, &task20, NULL, NULL);
-    fork_task(CORE2, &task21, NULL, NULL);
+    fork_task(CORE2, &task21, NULL, NULL);*/
 
     fork_task(CORE3, &task30, NULL, NULL);
     fork_task(CORE3, &task31, NULL, NULL);

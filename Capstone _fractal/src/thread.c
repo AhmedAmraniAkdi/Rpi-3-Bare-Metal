@@ -67,6 +67,9 @@ struct task_struct* fork_task(core_number_t core, void (*fn)(void *, void *), vo
 	}
 
 	core_tasks[core].tasks_num++;
+	/*if(core == 3){
+		printk("%d\n", core_tasks[core].tasks_num);
+	}*/
 	return p;
 }
 
@@ -95,9 +98,8 @@ void switch_to(struct task_struct * next){
 }
 
 void schedule(void){
+
 	unsigned core = CORE_ID();
-	if(core_tasks[core].tasks_num == 1) // if only init task return
-		return;
 
 	preempt_disable();
 	struct task_struct *temp = core_tasks[core].current; 
@@ -155,6 +157,7 @@ void join_all(void){
 void secondary_cores_threading_init(void){
 	ENABLE_CORE_TIMER();
 	unsigned core = CORE_ID();
+	//printk("\nhi\n");
 	if(!is_mmu_enabled(core)){ // means first time here: we enable mmu and interrupts
 		mmu_enable();
 		enable_irq();
@@ -176,20 +179,28 @@ void secondary_cores_threading_init(void){
 
 	SET_CORE_TIMER(TIMER_INT_PERIOD);
 
+	/*if(core == 3){
+		printk("secondaryinit %d\n", core_tasks[core].tasks_num);
+	}*/
+
 	join_all_core_tasks();
+
+	/*if(core == 3){
+		printk("secondaryinit after join %d\n", core_tasks[core].tasks_num);
+	}*/
 
 	DISABLE_CORE_TIMER();
 	
 	core_tasks[core].tasks_num--;
 	}
-	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep", core);
+	demand(core_tasks[core].tasks_num == 0, "not idle core %d went to sleep, num of tasks %d", core, core_tasks[core].tasks_num);
 }
 
 void threading_init(void){
 	ENABLE_CORE_TIMER();
 
-	PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&secondary_cores_threading_init);
-	PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&secondary_cores_threading_init);
+	//PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&secondary_cores_threading_init);
+	//PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&secondary_cores_threading_init);
 	PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&secondary_cores_threading_init);
 	WAKE_CORES();
 
@@ -214,11 +225,18 @@ void threading_init(void){
 }
 
 void exit_task(void){
-	int core = CORE_ID();
+	unsigned core = CORE_ID();
 	preempt_disable();
 	core_tasks[core].current->state = TASK_ZOMBIE;
 	core_tasks[core].tasks_num--;
+	/*if(core == 3){
+		printk("exit_task %d\n", core_tasks[core].tasks_num);
+	}*/
 	// no need to clean the struct because we can simply recycle it
 	schedule(); 
 	// after this the pc of current(the one zombified) will stop somewhere in context_switch and won't return ever
 }
+
+/*void say_bonjour(void){
+	printk("\ncore %d awake\n", CORE_ID());
+}*/
