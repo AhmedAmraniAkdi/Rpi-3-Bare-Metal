@@ -56,5 +56,6 @@ void scheduler_tick(void);
 struct task_struct* fork_task(core_number_t core, void (fn)(void *, void*), void *arg, void *ret);
 void yield_task(void);
 void join_task(struct task_struct *p);
+void join_all(void);
 
 #endif

@@ -71,7 +71,7 @@
 
 #include "mmu.h"
 #include "rpi.h"
-#include "VCmailbox.c"
+#include "VCmailbox.h"
 #include <stdint.h>
 
 // need alignement, address is at 12th bit

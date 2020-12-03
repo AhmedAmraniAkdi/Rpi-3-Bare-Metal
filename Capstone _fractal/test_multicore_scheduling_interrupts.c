@@ -28,71 +28,69 @@ static volatile int d1 = 0; // core 3
 
 void task00(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
         a0++;
     }
 }
 
 void task01(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
         a1++;
     }
 }
 
 void task10(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
+        delay_core_timer(100);
         b0++;
     }
 }
 
 void task11(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
+        delay_core_timer(100);
         b1++;
     }
 }
 
 void task20(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
+        delay_core_timer(100);
         c0++;
     }
 }
 
 void task21(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
+        delay_core_timer(100);
         c1++;
     }
 }
 
 void task30(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
+        delay_core_timer(100);
         d0++;
     }
 }
 
 void task31(void *arg, void *ret){
     for(int i = 0; i <= 10; i++){
-        delay_ms(500);
+        delay_core_timer(100);
         d1++;
     }
 }
 
 // core 0 executes notmain
 int notmain(void){
-    set_max_freq();
+    //set_max_freq();
     uart_init();
     interrupt_init();
-    populate_tables();
-    mmu_enable();
+    //populate_tables();
+    //mmu_enable();
 
     printk("early cnfiguration done\n");
 
-    register_irq_handler(bTIMER_CORE0, CORE0, scheduler_tick, core_timer_clearer);
+    register_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
     register_irq_handler(bTIMER_CORE1, CORE1, scheduler_tick, core_timer_clearer);
     register_irq_handler(bTIMER_CORE2, CORE2, scheduler_tick, core_timer_clearer);
     register_irq_handler(bTIMER_CORE3, CORE3, scheduler_tick, core_timer_clearer);
@@ -114,8 +112,10 @@ int notmain(void){
     threading_init(); 
 
     while(1){
-        delay_ms(500);
+        delay_core_timer(1);
         printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n",
         a0, a1, b0, b1, c0, c1, d0, d1);
     }
+
+    DISABLE_CORE_TIMER();
 };

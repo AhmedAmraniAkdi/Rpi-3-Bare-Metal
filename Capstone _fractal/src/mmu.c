@@ -71,7 +71,7 @@
 
 #include "mmu.h"
 #include "rpi.h"
-#include "VCmailbox.c"
+#include "VCmailbox.h"
 #include <stdint.h>
 
 static int mmu_enabled[4] = {0};
