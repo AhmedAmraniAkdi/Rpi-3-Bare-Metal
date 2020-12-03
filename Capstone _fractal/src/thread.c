@@ -81,6 +81,10 @@ void scheduler_tick(void){
     disable_irq();
 }
 
+void core_timer_clearer(void){
+	SET_CORE_TIMER(TIMER_INT_PERIOD);
+}
+
 void switch_to(struct task_struct * next){
 	unsigned core = CORE_ID();
 	if (core_tasks[core].current == next) 
@@ -107,7 +111,7 @@ void schedule(void){
 		}
 		temp = temp->next;
 		if(temp == core_tasks[core].current) break; // full circle
-	} 
+	}
 
 	if(!found){
 		preempt_enable();
@@ -149,6 +153,7 @@ void join_all(void){
 }
 
 void secondary_cores_threading_init(void){
+	ENABLE_CORE_TIMER();
 	unsigned core = CORE_ID();
 	if(!is_mmu_enabled(core)){ // means first time here: we enable mmu and interrupts
 		mmu_enable();

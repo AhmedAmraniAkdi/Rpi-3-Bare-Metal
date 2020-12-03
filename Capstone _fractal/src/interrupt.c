@@ -207,7 +207,3 @@ void irq_handler(void) {
         }
     }
 }
-
-void core_timer_clearer(void){
-	SET_CORE_TIMER(TIMER_INT_PERIOD);
-}

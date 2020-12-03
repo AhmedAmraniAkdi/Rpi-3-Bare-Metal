@@ -18,8 +18,6 @@
 // only irq
 #define NUM_IRQS (72 + 12 * 4)
 
-#define TIMER_INT_PERIOD (READ_TIMER_FREQ()/100)
-
 typedef enum {
     IRQ_BASIC_PENDING = 0x3F00B200,
     IRQ_GPU_PENDING1  = 0x3F00B204,

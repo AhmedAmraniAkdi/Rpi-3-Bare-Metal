@@ -27,73 +27,77 @@ static volatile int d0 = 0;
 static volatile int d1 = 0; // core 3
 
 void task00(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
+    while(1){
+        delay_core_timer(10);
         a0++;
     }
 }
 
 void task01(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
+    while(1){
+        delay_core_timer(10);
         a1++;
     }
 }
 
 void task10(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
-        delay_core_timer(100);
+    while(1){
+        delay_core_timer(10);
         b0++;
     }
 }
 
 void task11(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
-        delay_core_timer(100);
+    while(1){
+        delay_core_timer(10);
         b1++;
     }
 }
 
 void task20(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
-        delay_core_timer(100);
+    while(1){
+        delay_core_timer(10);
         c0++;
     }
 }
 
 void task21(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
-        delay_core_timer(100);
+    while(1){
+        delay_core_timer(10);
         c1++;
     }
 }
 
 void task30(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
-        delay_core_timer(100);
+    while(1){
+        delay_core_timer(10);
         d0++;
+        if(d0 > 60) break;
     }
 }
 
 void task31(void *arg, void *ret){
-    for(int i = 0; i <= 10; i++){
-        delay_core_timer(100);
+    while(1){
+        delay_core_timer(10);
         d1++;
+        if(d1 > 120) break;
     }
 }
 
 // core 0 executes notmain
 int notmain(void){
-    //set_max_freq();
+    set_max_freq();
     uart_init();
     interrupt_init();
-    //populate_tables();
-    //mmu_enable();
+    populate_tables();
+    mmu_enable();
 
     printk("early cnfiguration done\n");
 
     register_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
-    register_irq_handler(bTIMER_CORE1, CORE1, scheduler_tick, core_timer_clearer);
-    register_irq_handler(bTIMER_CORE2, CORE2, scheduler_tick, core_timer_clearer);
-    register_irq_handler(bTIMER_CORE3, CORE3, scheduler_tick, core_timer_clearer);
+    register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
+    register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
+    register_irq_handler(bTIMER_CORE3, CORE3, &scheduler_tick, &core_timer_clearer);
 
     printk("registered all irq handlers for all 4 cores\n");
 
@@ -117,5 +121,6 @@ int notmain(void){
         a0, a1, b0, b1, c0, c1, d0, d1);
     }
 
+    join_all();
     DISABLE_CORE_TIMER();
 };

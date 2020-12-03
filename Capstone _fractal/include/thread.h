@@ -11,6 +11,7 @@
 #define TASK_RUNNING 2
 #define TASK_ZOMBIE  3
 
+#define TIMER_INT_PERIOD (READ_TIMER_FREQ()/100)
 
 struct cpu_context {
 	uint64_t x19;
@@ -53,6 +54,7 @@ typedef struct core_tasks_ctrl{
 void threading_init(void);
 void schedule(void);
 void scheduler_tick(void);
+void core_timer_clearer(void);
 struct task_struct* fork_task(core_number_t core, void (fn)(void *, void*), void *arg, void *ret);
 void yield_task(void);
 void join_task(struct task_struct *p);
