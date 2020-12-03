@@ -8,7 +8,7 @@
        a return value of size or more means that  the  output  was  truncated.
        (See also below under NOTES.)
 */
-#include "assert.h"
+#include "kassert.h"
 #include "rpi.h"
 #include <stdint.h>
 

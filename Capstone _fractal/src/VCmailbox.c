@@ -3,7 +3,7 @@
 #include "VCmailbox.h"
 #include "rpi.h"
 #include <stdint.h>
-#include "assert.h"
+#include "kassert.h"
 #include "mini_uart.h"
 /* mailbox message buffer */
 static int is_turbo = 0;

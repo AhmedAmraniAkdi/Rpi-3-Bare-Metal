@@ -1,5 +1,5 @@
 #include "rpi.h"
-#include "assert.h"
+#include "kassert.h"
 #include "interrupt.h"
 
 static interrupt_handler_f handlers[NUM_IRQS] = {0};

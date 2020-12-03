@@ -12,14 +12,6 @@
 #define TASK_ZOMBIE  3
 
 
-
-// callee registers, let'see, there are 2 types:
-// caller: if you will use them after the function call, the caller saves them before calling and restores them after calling
-// callee: these ones maintain their values through function calls, so it's the callee responsability 
-// to store them before using and to restore them after ending the function call
-// the function call here is context_switch, so from the point of view of the task, we just entering a function and returning, it doesn't know, that
-// we changed to another task
-// added d8-d15, lower halves of v8-v15 neon registers(simd/fp)
 struct cpu_context {
 	uint64_t x19;
 	uint64_t x20;
@@ -46,18 +38,10 @@ struct cpu_context {
 
 struct task_struct {
 	struct cpu_context cpu_context;
-	uint64_t stack_start;
 	int state;
 	int preempt_count; // 1 if executing critical stuff
-	// ok so since i don't want to make it harder by implementing condition variables
-	// when allocating stuff on the heap (could also give each core it heap)...
-	// I'll just give each task a stack of 8192 from the get go, no need to allocate anything
-	// with this i don't need linked lists nor kmalloc with this threading functions
 	char stack[8192];
-	// stack_start = &stack[127] - 16 + some rounding up to 16 alignement
-	// would be different if i didn't have 1GB memory laying around like nothing hahaha
 	struct task_struct *next; // points to the next task in line after current, can be zombie/ready
-	int task_id; // identifies the task with an ID
 };
 
 typedef struct core_tasks_ctrl{

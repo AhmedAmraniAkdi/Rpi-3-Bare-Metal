@@ -11,7 +11,7 @@
 #include "interrupt.h"
 #include "thread.h"
 #include "mini_uart.h"
-#include "assert.h"
+#include "kassert.h"
 #include <stdint.h>
 #include "mmu.h"
 #include "VCmailbox.h"
