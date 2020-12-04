@@ -2,15 +2,8 @@
 #include "kassert.h"
 #include "interrupt.h"
 
-static interrupt_handler_f handlers[NUM_IRQS] = {0};
-static interrupt_clearer_f clearers[NUM_IRQS] = {0};
-
-// quick thought
-//if we want to route the non arm specific irqs to another core other than 0 we do
-// irq_handlers start and end change
-// interrupt init routing changes
-// is pending condition changes
-// everything else stays the same i think
+static interrupt_handler_f handlers[4] = {0};
+static interrupt_clearer_f clearers[4] = {0};
 
 const char *entry_error_messages[] = {
 	"SYNC_INVALID_EL1t",
@@ -74,136 +67,64 @@ void show_invalid_entry_message(int type, uint64_t esr, uint64_t address){
 }
 
 // irqs will be enabled when registering the handlers
+#define CORE_MAILBOX_WRITETOSET 0x40000080
+void enable_irq_secondary(void){
+    enable_irq();
+}
+
 void interrupt_init(void){
-    PUT32(IRQ_BASIC_DISABLE, 0xFFFFFFFF);
-    PUT32(GPU_ROUTING_INTERRUPT, 0x0);
-    PUT32(LOCAL_TIMER_ROUTING, 0x0);
     for(int i = 0; i < 4; i++){
         PUT32(CORE_TIMER_INTERRUPT_CTRL+ i * 4, 0x0);
         PUT32(CORE_MAILBOX_INTERRUPT + i * 4, 0x0);
     }
     enable_irq();
+    PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&enable_irq_secondary);
+	PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&enable_irq_secondary);
+	PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&enable_irq_secondary);
+	WAKE_CORES();
     DSB();
 }
 
-int is_pending(irq_number_t irq_num){
+void disable_core_timer_int(void){
+    unsigned core = CORE_ID();
+    PUT32(CORE_TIMER_INTERRUPT_CTRL+ core * 4, 0x0);
+}
+
+void enable_core_timer_int(void){
+    unsigned core = CORE_ID();
+    PUT32(CORE_TIMER_INTERRUPT_CTRL+ core * 4, 0x2);
+}
+
+int is_pending(){
     uint32_t core_id = CORE_ID(); // check in which core we are
-
-    if(core_id != 0){
-        unsigned arm_control = 0;
-        arm_control = ((1 << (irq_num - (72 + 12 * core_id))) & GET32(CORE_INTERRUPT_IRQ_SOURCE + 4 * core_id));
-        return arm_control;
-    } else {
-        unsigned basic = 0, arm_control = 0;
-
-        basic = IRQ_IS_BASIC(irq_num) && ((1 << (irq_num - 64)) & GET32(IRQ_BASIC_PENDING));
-    
-        arm_control = IRQ_IS_ARM_CONTROL(irq_num) && ( (1 << (irq_num - 72)) & GET32(CORE_INTERRUPT_IRQ_SOURCE));
-        return (basic || arm_control);
-    }
+    unsigned arm_control = 0;
+    arm_control = (0x2 & GET32(CORE_INTERRUPT_IRQ_SOURCE + 4 * core_id));
+    return arm_control;
 }
 
 void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_handler_f handler, interrupt_clearer_f clearer){
-    int irq_pos = -1;
-    if (IRQ_IS_ARM_CONTROL(irq_num)){
-        // core 0 will set up these
-        handlers[irq_num] = handler;
-        clearers[irq_num] = clearer;
+    // core 0 will set up these
+    handlers[core] = handler;
+    clearers[core] = clearer;
 
-        uint32_t irq_ctrl_register = 0xFFFFFFFF; //qa7 has separate registers
-        irq_pos = irq_num - (72 + 12 * core);
-        if(irq_pos < 4){
-            irq_ctrl_register = CORE_TIMER_INTERRUPT_CTRL + 4 * core;
-        }
-        else if (irq_pos == 11){
-            irq_ctrl_register = LOCAL_TIMER_CONTROL;
-            irq_pos = 29;
-        }
-        else if(irq_pos > 3 && irq_pos < 8){
-            irq_ctrl_register = CORE_MAILBOX_INTERRUPT + 4 * core;
-            // example: mailbox3 of core 2: irq_num = 103
-            // irq_pos = 3 which is correct
-            irq_pos = irq_num - (72 + 12 * core) - 4;
-        }
-        demand(irq_pos != -1 || irq_ctrl_register == 0xFFFFFFFF, "could not unregister irq handler");
-        uint32_t r = GET32(irq_ctrl_register);
-        PUT32(irq_ctrl_register, r | (1 << irq_pos));
-    } 
-    else if (IRQ_IS_BASIC(irq_num)) {
-        irq_pos = irq_num - 64;
-        handlers[irq_num] = handler;
-	    clearers[irq_num] = clearer;
-        uint32_t r = GET32(IRQ_BASIC_ENABLE);
-        PUT32(IRQ_BASIC_ENABLE, r | (1 << irq_pos));
-    }
-    else {
-        panic("ERROR: CANNOT REGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
-    }
-    demand(handlers[irq_num] != 0, "handler wasnt set correctly");
-    demand(clearers[irq_num] != 0, "clearer wasnt set correctly");
-    DSB();
-}
-
-void unregister_irq_handler(irq_number_t irq_num, core_number_t core){
-    int irq_pos = -1;
-    if (IRQ_IS_ARM_CONTROL(irq_num)){
-        // core 0 will clear up these
-        handlers[irq_num] = 0;
-        clearers[irq_num] = 0;
-
-        uint32_t irq_ctrl_register = 0xFFFFFFFF; //qa7 has separate registers
-        irq_pos = irq_num - (72 + 12 * core);
-        if(irq_pos < 4){
-            irq_ctrl_register = CORE_TIMER_INTERRUPT_CTRL + 4 * core;   
-        }
-        else if (irq_pos == 11){
-            irq_ctrl_register = LOCAL_TIMER_CONTROL;
-            irq_pos = 29;
-        }
-        else if(irq_pos > 3 && irq_pos < 8){
-            irq_ctrl_register = CORE_MAILBOX_INTERRUPT + 4 * core;
-            // example: mailbox3 of core 2: irq_num = 103
-            // irq_pos = 3 which is correct
-            irq_pos = irq_num - (72 + 12 * core) - 4;
-        }
-        uint32_t r = GET32(irq_ctrl_register);
-        demand(irq_pos != -1 || irq_ctrl_register == 0xFFFFFFFF, "could not unregister irq handler");
-        PUT32(irq_ctrl_register, r & ~(1 << irq_pos));
-    }
-    else if (IRQ_IS_BASIC(irq_num)) {
-        irq_pos = irq_num - 64;
-        handlers[irq_num] = 0;
-        clearers[irq_num] = 0;
-        uint32_t r = GET32(IRQ_BASIC_DISABLE);
-        PUT32(IRQ_BASIC_DISABLE, r | (1 << irq_pos));
-    }
-    else {
-        panic("ERROR: CANNOT UNREGISTER IRQ HANDLER: INVALID IRQ NUMBER: %d\n", irq_num);
-    }
-    demand(handlers[irq_num] == 0, "handler wasnt cleared correctly");
-    demand(clearers[irq_num] == 0, "clearer wasnt cleared correctly");
+    uint32_t irq_ctrl_register = CORE_TIMER_INTERRUPT_CTRL + 4 * core; //qa7 has separate registers
+    int irq_pos = irq_num - (72 + 12 * core);
+    uint32_t r = GET32(irq_ctrl_register);
+    
+    PUT32(irq_ctrl_register, r | (1 << irq_pos));
+    
     DSB();
 }
 
 // processor disables all ints when irq_handler is called , no nested interrupts for now
 // loop : that way we eat multiple ints if there are demanded
 void irq_handler(void) {
-    // we don't want a core eating irqs of other cores
-    uint32_t core_id = CORE_ID();
-    int start, end;
-    if(core_id != 0){
-        start = 72 + 12 * core_id;
-        end   = start + 12;
-    } else {
-        start = 0;
-        end   = 84;
-    }
-	for (int j = start; j < end; j++) {
-        if (is_pending(j)  && (handlers[j] != 0)) {
-            DSB();
-		    clearers[j]();
-		    handlers[j]();
-            DSB();
-        }
+    unsigned core = CORE_ID();
+    if (is_pending()  && (handlers[core] != 0)) {
+        DSB();
+		clearers[core]();
+		handlers[core]();
+        DSB();
     }
 }
+

@@ -85,11 +85,17 @@ typedef void (*interrupt_clearer_f)(void);
 
 extern void disable_irq(void);
 extern void enable_irq(void);
+extern void irq_vector_init(void);
+extern void ENABLE_CORE_TIMER(void);
+extern void SET_CORE_TIMER(uint32_t);
+extern uint64_t READ_TIMER_FREQ(void);
+extern uint64_t READ_TIMER(void);
 extern void DISABLE_CORE_TIMER(void);
 
 void interrupt_init(void);
 void register_irq_handler(irq_number_t irq_num, core_number_t core, interrupt_handler_f handler, interrupt_clearer_f clearer);
-int is_pending();
+void unregister_irq_handler(irq_number_t irq_num, core_number_t core);
+int is_pending(irq_number_t irq_num);
 
 void irq_handler(void);
 void show_invalid_entry_message(int type, uint64_t esr, uint64_t address);

@@ -31,6 +31,16 @@ void delay_us(unsigned us);
 void delay_ms(unsigned ms);
 void delay_core_timer(unsigned divisor);
 
+
+extern void ENABLE_CORE_TIMER(void);
+extern void SET_CORE_TIMER(uint32_t);
+extern uint64_t READ_TIMER_FREQ(void);
+extern uint64_t READ_TIMER(void);
+extern uint32_t READ_TIMER_CONTROL(void);
+
+extern void WAIT_UNTIL_EVENT(void);
+extern void WAKE_CORES(void);
+
 /************DEBUGGING***********/
 // Took these from https://github.com/dddrrreee/cs140e-20win/tree/master/libpi
 // will be helpful
@@ -56,5 +66,14 @@ typedef enum{
     CORE2 = 2,
     CORE3 = 3,
 } core_number_t;
+
+/***********helpers************/
+
+#define is_aligned(x, a)        (((x) & ((typeof(x))(a) - 1)) == 0)
+#define is_aligned_ptr(x, a)        is_aligned((uintptr_t)x,a)
+
+#define pi_roundup(x,n) (((x)+((n)-1))&(~((n)-1)))
+
+#define NULL ((void*)0)
 
 #endif

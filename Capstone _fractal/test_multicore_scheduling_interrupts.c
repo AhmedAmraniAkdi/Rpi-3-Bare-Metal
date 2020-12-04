@@ -15,7 +15,6 @@
 #include <stdint.h>
 #include "mmu.h"
 #include "VCmailbox.h"
-#include "helper_macros.h"
 
 static volatile int a0 = 0; 
 static volatile int a1 = 0; // core 0
@@ -30,7 +29,7 @@ void task00(void *arg, void *ret){
     while(1){
         delay_core_timer(10);
         a0++;
-        if(d0 > 10) break;
+        if(a0 > 100) break;
     }
 }
 
@@ -38,7 +37,7 @@ void task01(void *arg, void *ret){
     while(1){
         delay_core_timer(10);
         a1++;
-        if(d0 > 10) break;
+        if(a1 > 100) break;
     }
 }
 
@@ -90,14 +89,14 @@ void task31(void *arg, void *ret){
 
 // core 0 executes notmain
 int notmain(void){
-    set_max_freq();
+    //set_max_freq();
     uart_init();
-    print_info_mem_freq();
+    //print_info_mem_freq();
     interrupt_init();
     populate_tables();
     mmu_enable();
 
-    printk("early cnfiguration done\n");
+    printk("early configuration done\n");
 
     register_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
     register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
@@ -120,18 +119,56 @@ int notmain(void){
 
     threading_init(); 
 
-    /*while(1){
+    while(1){
         delay_core_timer(1);
         printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
-    }*/
+    }
 
     join_all();
 
     printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
 
-    printk("\nlet's go fractal\n");
+    /*printk("reusing threads\n");
 
-    DISABLE_CORE_TIMER();
+    a0 = 0; 
+    a1 = 0; 
+    b0 = 0; 
+    b1 = 0; 
+    c0 = 0; 
+    c1 = 0; 
+    d0 = 0; 
+    d1 = 0;
+
+    printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
+
+    fork_task(CORE0, &task00, NULL, NULL);
+    //fork_task(CORE0, &task01, NULL, NULL);
+
+    fork_task(CORE1, &task10, NULL, NULL);
+    fork_task(CORE1, &task11, NULL, NULL);
+
+    fork_task(CORE2, &task20, NULL, NULL);
+    fork_task(CORE2, &task21, NULL, NULL);
+
+    fork_task(CORE3, &task30, NULL, NULL);
+    fork_task(CORE3, &task31, NULL, NULL);
+
+    printk("reassigned tasks\n");
+
+    printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
+
+    threading_init(); 
+    
+    while(1){
+        delay_core_timer(1);
+        printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
+    }
+
+    join_all();
+
+    printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
+
+    printk("\nlet's go fractal\n");*/
 
     while(1){}
 };

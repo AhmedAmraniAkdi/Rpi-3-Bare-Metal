@@ -74,12 +74,7 @@
 #include "VCmailbox.h"
 #include <stdint.h>
 
-static int mmu_enabled[4] = {0};
 static int populated = 0;
-
-int is_mmu_enabled(int core){
-    return mmu_enabled[core];
-}
 
 // need alignement, address is at 12th bit
 static uint64_t __attribute__((aligned(4096))) L2_table[1024] = {0};
@@ -144,10 +139,17 @@ void populate_tables(void){
 
 extern void enable_mmu_tables(uint64_t *table_entry);
 
+#define CORE_MAILBOX_WRITETOSET 0x40000080
+void mmu_enable_secondary(void){
+    enable_mmu_tables(&L1_table[0]);
+}
 void mmu_enable(void){
-    if(!populated)
+    if(!populated){
         populate_tables();
-    int core = CORE_ID();
+    }
 	enable_mmu_tables(&L1_table[0]);
-    mmu_enabled[core] = 1;
+    PUT32(CORE_MAILBOX_WRITETOSET + 16, (uintptr_t)&mmu_enable_secondary);
+	PUT32(CORE_MAILBOX_WRITETOSET + 32, (uintptr_t)&mmu_enable_secondary);
+	PUT32(CORE_MAILBOX_WRITETOSET + 48, (uintptr_t)&mmu_enable_secondary);
+	WAKE_CORES();
 }

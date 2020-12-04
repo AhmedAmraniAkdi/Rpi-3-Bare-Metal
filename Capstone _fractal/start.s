@@ -68,11 +68,13 @@ _start:
     eret
 
 5:   
+    mov     x1, #1
+	msr     CNTP_CTL_EL0, x1 // enable core timer
     mrs     x1, mpidr_el1
     and     x1, x1, #3
     cbz     x1, 6f
     // cpu id > 0, stop
-    bl start_sleep
+    b start_sleep
 
 6:
     // clear bss
@@ -104,7 +106,7 @@ start_sleep:  // cleans mailboxes
 	and x6, x6, #0x3		   // Create 2 bit mask of core Id
 	mov x6, x6, lsl #4         // core_id *= 16
 	ldr w4, [x5, x6]		   // Read the mailbox
-	str	w4, [x5, x6]
+	str	w4, [x5, x6]           // clearit
     b WAIT_UNTIL_EVENT
 
 

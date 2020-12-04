@@ -20,6 +20,5 @@ typedef enum {
 
 void populate_tables(void);
 void mmu_enable(void);
-int is_mmu_enabled(int core);
 
 #endif

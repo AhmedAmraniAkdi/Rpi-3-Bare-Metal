@@ -30,3 +30,8 @@ DISABLE_CORE_TIMER:
 	mov x0, #0
 	msr CNTP_CTL_EL0, x0  // DIsable EL1 physical timer
 	ret	
+
+.globl READ_TIMER_CONTROL
+READ_TIMER_CONTROL:
+	mrs x0, CNTP_CTL_EL0 
+	ret	
