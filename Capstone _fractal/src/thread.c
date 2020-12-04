@@ -59,7 +59,6 @@ void schedule(void){
 			break;
 		}
 		temp = temp->next;
-		if(temp == core_tasks[core].current) break; // full circle
 	}
 
 	if(!found){
@@ -101,6 +100,10 @@ void exit_task(void){
 	preempt_disable();
 	core_tasks[core].current->state = TASK_ZOMBIE;
 	core_tasks[core].tasks_num--;
+
+	core_tasks[core].current->next->previous = core_tasks[core].current->previous;
+	core_tasks[core].current->previous->next = core_tasks[core].current->next;
+
 	schedule(); 
 }
 
@@ -123,6 +126,7 @@ struct task_struct* fork_task(core_number_t core, void (*fn)(void *, void *), vo
 
 	p->cpu_context = empty_context;
 	p->next = NULL;
+	p->previous = NULL;
 	p->state = TASK_READY;
 	p->preempt_count = 1; //disable preemtion until starting to execute thread
 	p->cpu_context.x19 = (uint64_t)fn;
@@ -135,12 +139,21 @@ struct task_struct* fork_task(core_number_t core, void (*fn)(void *, void *), vo
 	
 	if(core_tasks[core].tasks_num == 0){ // if there are no tasks, current is task 0 (main)
 		core_tasks[core].tasks[0].next = p;
+		core_tasks[core].tasks[0].previous = p;
+
+		p->next = &(core_tasks[core].tasks[0]);
+		p->previous = &(core_tasks[core].tasks[0]);
+
 		core_tasks[core].current = &core_tasks[core].tasks[0];
 		core_tasks[core].tasks_num++; // we effectively add 2 tasks at the start, p + main
 	} else {
 		struct task_struct *q = core_tasks[core].current->next;
+
 		core_tasks[core].current->next = p;
 		p->next = q;
+
+		q->previous = p;
+		p->previous = core_tasks[core].current;
 	}
 	core_tasks[core].tasks_num++;
 	return p;
@@ -153,13 +166,6 @@ void secondary_cores_threading_init(void){
 	enable_core_timer_int();
 	//reset_mains_stack();
 	core_tasks[core].current->state = TASK_RUNNING;
-
-	//close list
-	struct task_struct *q = core_tasks[core].current;
-	while(q->next){
-		q = q->next;
-	}
-	q->next = core_tasks[core].current;
 
 	SET_CORE_TIMER(TIMER_INT_PERIOD);
 	join_all_core_tasks();
@@ -175,13 +181,6 @@ void threading_init(void){
 	WAKE_CORES();
 
 	core_tasks[0].current->state = TASK_RUNNING;
-
-	//close list
-	struct task_struct *q = core_tasks[0].current;
-	while(q->next){
-		q = q->next;
-	}
-	q->next = core_tasks[0].current;
 
 	SET_CORE_TIMER(TIMER_INT_PERIOD);
 }

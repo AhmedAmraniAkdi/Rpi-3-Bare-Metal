@@ -41,7 +41,8 @@ struct task_struct {
 	int state;
 	int preempt_count; // 1 if executing critical stuff
 	char stack[8192];
-	struct task_struct *next; // points to the next task in line after current, can be zombie/ready
+	struct task_struct *next;
+	struct task_struct *previous;
 };
 
 typedef struct core_tasks_ctrl{
