@@ -12,7 +12,6 @@ extern void ret_from_fork(void);
 extern void context_switch(struct task_struct* prev, struct task_struct* next);
 extern void enable_irq(void);
 extern void disable_irq(void);
-extern void reset_mains_stack();
 
 void preempt_disable(void){
 	unsigned core = CORE_ID();

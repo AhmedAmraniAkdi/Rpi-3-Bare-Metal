@@ -35,20 +35,3 @@ context_switch:
     mov sp, x9
 
     ret
-
-.globl reset_mains_stack
-reset_mains_stack:
-    ldr     x2, =__stack_end_core0__			
-	mrs     x6, mpidr_el1						
-	ands    x6, x6, #0x3
-    cbz     x6, 1f						
-    ldr     x2, =__stack_end_core1__		
-	cmp     x6, #1								
-	beq     1f							
-    ldr     x2, = __stack_end_core2__			
-	cmp     x6, #2								
-	beq     1f							
-    ldr     x2, =__stack_end_core3__			
-1:
-	mov	    sp, x2
-    ret

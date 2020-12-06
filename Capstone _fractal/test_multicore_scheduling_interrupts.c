@@ -119,16 +119,16 @@ int notmain(void){
 
     threading_init(); 
 
-    while(1){
+    /*while(1){
         delay_core_timer(1);
         printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
-    }
+    }*/
 
     join_all();
 
     printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
 
-    /*printk("reusing threads\n");
+    printk("reusing threads\n");
 
     a0 = 0; 
     a1 = 0; 
@@ -142,7 +142,7 @@ int notmain(void){
     printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
 
     fork_task(CORE0, &task00, NULL, NULL);
-    //fork_task(CORE0, &task01, NULL, NULL);
+    fork_task(CORE0, &task01, NULL, NULL);
 
     fork_task(CORE1, &task10, NULL, NULL);
     fork_task(CORE1, &task11, NULL, NULL);
@@ -159,16 +159,16 @@ int notmain(void){
 
     threading_init(); 
     
-    while(1){
+    /*while(1){
         delay_core_timer(1);
         printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
-    }
+    }*/
 
     join_all();
 
     printk("a0 = %d a1 = %d b0 = %d b1 = %d c0 = %d c1 = %d d0 = %d d1 = %d\n", a0, a1, b0, b1, c0, c1, d0, d1);
 
-    printk("\nlet's go fractal\n");*/
+    printk("\nlet's go fractal\n");
 
     while(1){}
 };
