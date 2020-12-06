@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/include"
+                "${workspaceFolder}/include",
+                "/usr/local/bin/aarch64-none-elf/**"
             ],
             "defines": [],
             "compilerPath": "/usr/local/bin/aarch64-none-elf/bin/aarch64-none-elf-gcc",
