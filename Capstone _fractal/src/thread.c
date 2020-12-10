@@ -186,3 +186,14 @@ void threading_init(void){
 
 
 
+/**
+ * 
+ * 
+ * #pragma omp parallel for schedule(dynamic, 1)
+ *for (int y = 0; y < s->height; y++) {
+ *    ... 
+ *}
+ *This is an Open Multi-Processing (OpenMP) pragma. It’s a higher-level threading API than POSIX or Win32 threads.
+ * 
+ * 
+ */

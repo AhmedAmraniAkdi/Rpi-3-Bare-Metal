@@ -8,101 +8,108 @@
 #include "VCmailbox.h"
 #include <arm_neon.h>
 #include "fb.h"
-#include <math.h>
+//#include <math.h>
 
 // let's do this
-// bmce2837 is cortex-a53 , it has neon and not scalable vector extension sve
 
-/*
-x = deltaX/width * (Xpixel + pan_factor * Xpan + Xstart) * Scale
-Y = deltaY/heigth * (Ypixel + pan_factor * Ypan + Ystart) * Scale
-*/
-#define width 1024
-#define height 768
+#define width 640
+#define height 480
+#define depth 4
 
-//static int pan_factor = 10;
+#define Xstart -10.0
+#define Ystart -10.0
+#define Xend 10.0
+#define Yend 10.0
+
 static int Xpan = 0;
 static int Ypan = 0;
-static double scale = 1;
+static float scale = 1.0;
 
-//static double Xstart = -2.0;
-//static double Ystart = -2.0;
-
-static double deltaX = 4.0;
-static double deltaY = 4.0;
-
-static uint32_t *bf;
+static uint32_t *bf = NULL;
 
 #define line_per_thread 24 // 32 threads total (not counting mains) and 768 heights -> 24 lines per thread;
 #define total_threads 32
-#define iterations 1024
+#define iterations 512
+#define LOGITER 2.709
 
-void colour_fractal(uint64_t n1, uint64_t n2, uint32_t *buffer_temp){
-    *buffer_temp = ((int) (127.5 * sin(0.1 * n1) + 127.5)) 
-        | ((int) (127.5 * sin(0.1 * n1 + 2.094) + 127.5) << 8)
-        | ((int) (127.5 * sin(0.1 * n1 + 4.188) + 127.5) << 16);
+// RGBA
+static uint32_t color_palette[] = {
+     0x99B89800, 0xFECEAB00, 0xFF847C00, 0xE84A5F00, 0x2A363B00 
+};
+#define len_palette 5
 
-    buffer_temp++;
+// https://stackoverflow.com/questions/15048098/write-log-function-without-math-library
+static inline float fastlog2 (float x)
+{
+    union { float f; uint32_t i; } vx = { x };
+    union { uint32_t i; float f; } mx = { (vx.i & 0x007FFFFF) | 0x3f000000 };
+    float y = vx.i;
+    y *= 1.1920928955078125e-7f;
 
-    *buffer_temp = ((int) (127.5 * sin(0.1 * n2) + 127.5)) 
-        | ((int) (127.5 * sin(0.1 * n2 + 2.094) + 127.5) << 8)
-        | ((int) (127.5 * sin(0.1 * n2 + 4.188) + 127.5) << 16);
-
-    buffer_temp++;
-    
+    return y - 124.22551499f
+             - 1.498030302f * mx.f 
+             - 1.72587999f / (0.3520887068f + mx.f);
 }
+
+static inline float fastlog (float x)
+{
+    return 0.69314718f * fastlog2 (x);
+}
+
 
 // big inspiration from
 // https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/Videos/OneLoneCoder_VIDEO_IntrinsicFunctions.cpp
 void draw_fractal_mandelbrot(void *arg, void *ret){
-    int *ith_line = (int*)arg;
+    float *ith_line = (float*)arg;
     uint32_t *buffer_temp = bf;
 
-    double xcoord = 0.0, ycoord = 0.0;
-    double xcoords[2] = {0,0};
+    float32x4_t _a, _b, _zr, _zi, _zr2, _zi2, _cr, _ci;
+    float32x4_t _two = vdupq_n_f32(2.0);
+    float32x4_t _four = vdupq_n_f32(4.0);
+    float32x4_t _x_offset123 = {0.0, 1.0, 2.0, 3.0};
 
-    // https://gist.github.com/csarron/3191b401ec545f78022881f1805cae9a
-    // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics
+    uint32x4_t _n, _mask0, _mask1;
+    uint32x4_t _iterations =  vdupq_n_u32(iterations);
+    uint32x4_t _one = {1, 1, 1, 1};
 
-    float64x2_t _a, _b, _zr, _zi, _zr2, _zi2, _cr, _ci;
-    float64x2_t _two = {2.0, 2.0};
-    float64x2_t _four = {4.0, 4.0};
+    float32x4_t _xmin = vdupq_n_f32(Xstart);
+    float32x4_t _ymin = vdupq_n_f32(Ystart);
+    float32x4_t _xscale = vdupq_n_f32((float)(Xend - Xstart)/width);
+    float32x4_t _yscale = vdupq_n_f32((float)(Yend - Ystart)/height);
 
-    uint64x2_t _n, _mask0, _mask1, _temp;
-    uint64x2_t _iterations = {iterations, iterations};
-    uint64x2_t _one = {1,1};
+    float coloring_indx = 0;
+    float temp = 0;
 
-    uint64_t n1 = 0, n2 = 0;
 
-    for(int y = *ith_line; y < line_per_thread; y += total_threads, buffer_temp += (total_threads * width)){
+    //for(int y = *ith_line; y < line_per_thread; y += total_threads, buffer_temp += (total_threads * width)){
+    for(float y = *ith_line; y < height; y++){
+        _a  = vdupq_n_f32(y);
+        _ci = vmlaq_f32(_ymin, _yscale, _a);
 
-        ycoord = deltaY/height * (y + Ypan) * scale;
-        _ci    = vld1q_dup_f64(&ycoord);
-
-        for(int x = 0; x < width; x += 2/*, buffer_temp += 2*/){ // x, y are pixel space
+        for(float x = 0; x < width; x += 4/*, buffer_temp += 4*/){ // x, y are pixel space
             
-            xcoord     = deltaX/width * (x + Xpan) * scale;
-            xcoords[0] = xcoord;
-            xcoords[1] = xcoord + deltaX/width * scale;
-            _cr        = vld1q_f64(xcoords);
+            _a  = vdupq_n_f32(x);
+            _a  = vaddq_f32(_a, _x_offset123);
+            _cr = vmlaq_f32(_xmin, _xscale, _a);
 
-            _zi = vmovq_n_f64(0.0);
-            _zr = vmovq_n_f64(0.0);
-            _n  = vmovq_n_u64(0);
+
+            _zi = vdupq_n_f32(0.0);
+            _zr = vdupq_n_f32(0.0);
+            _n  = vdupq_n_u32(0);
             
             r:
             // z = a + ib = z * z + c
             // a = zr * zr - zi * zi + cr = zr2 - zi2 + cr
             // b = zi * zi * 2.0 + ci
 
-            _zr2 = vmulq_f64(_zr, _zr);
-            _zi2 = vmulq_f64(_zi, _zi);
+            _zr2 = vmulq_f32(_zr, _zr);
+            _zi2 = vmulq_f32(_zi, _zi);
 
-            _a   = vsubq_f64(_zr2, _zi2);
-            _a   = vaddq_f64(_a, _cr);
+            _a   = vsubq_f32(_zr2, _zi2);
+            _a   = vaddq_f32(_a, _cr);
 
-            _b   = vmulq_f64(_zi, _zi);
-            _b   = vmlaq_f64(_ci, _b, _two);
+            _b   = vmulq_f32(_zi, _zi);
+            _b   = vmlaq_f32(_ci, _b, _two);
 
             _zr  = _a;
             _zi  = _b;
@@ -110,28 +117,27 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             // while( abs(z) < 2 && n < iterations)
             // while((zi * zi + zr * zr) < 4 && n < iterations)
 
-            _a     = vaddq_f64(_zr2, _zi2);
-            _mask0 = vcltq_f64(_a, _four);
-            _mask1 = vcltq_u64(_n, _iterations);
-            _mask1 = vandq_u64(_mask1, _mask0);
+            _a     = vaddq_f32(_zr2, _zi2);
+            _mask0 = vcltq_f32(_a, _four);
+
+            if(vaddvq_u32(_mask0) == 0){ // add the vectors together
+                goto colour;
+            }
+
+            _mask1 = vcltq_u32(_n, _iterations);
+            _mask1 = vandq_u32(_mask1, _mask0);
 
             // we increment n in places where the condition holds
 
-            _temp = vandq_u64(_mask1, _one);
-            _n    = vaddq_u64(_n , _temp);
+            _n    = vaddq_u32(_n , vandq_u32(_mask1, _one));
 
-            // https://stackoverflow.com/questions/41005281/testing-neon-simd-registers-for-equality-over-all-lanes
-            // https://stackoverflow.com/questions/34504266/comparision-with-zero-using-neon-instruction
-
-            // if any element in narrowed mask1 is 1 then we still iterate
-            //if(vqmovn_u64(_mask1) > 0) // in the compiler we trust (need to pick maximum of the 32x2?)
-            if(vaddvq_u64(_mask1) > 0){ // add the vectors together
+            if(vaddvq_u32(_mask1) > 0){ // add the vectors together
                 goto r;
             }
 
-            n1 = vgetq_lane_u64(_n, 0);
-            n2 = vgetq_lane_u64(_n, 1);
-            colour_fractal(n1, n2, buffer_temp);
+            colour:
+
+            // something
         }
     }
 
@@ -139,19 +145,17 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
 
 void notmain(){
 
-    set_max_freq();
     uart_init();
-    print_info_mem_freq();
     interrupt_init();
     populate_tables();
     mmu_enable();
-    fb_init();
-    bf = buffer();
+    bf = fb_init();
 
-    register_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
-    register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
-    register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
-    register_irq_handler(bTIMER_CORE3, CORE3, &scheduler_tick, &core_timer_clearer);
+
+    //egister_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
+    //register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
+    //register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
+    //register_irq_handler(bTIMER_CORE3, CORE3, &scheduler_tick, &core_timer_clearer);
 
     printk("configuration complete\n");
 
@@ -168,17 +172,19 @@ void notmain(){
             ith_line++;
         }
     }*/
-    int k = 0;
+    /*int k = 0;
     fork_task(CORE0, &draw_fractal_mandelbrot, &k, NULL);
     int j = 1;
-    fork_task(CORE1, &draw_fractal_mandelbrot, &j, NULL);
+    fork_task(CORE1, &draw_fractal_mandelbrot, &j, NULL);*/
+    int k = 0;
+    //fork_task(CORE0, &draw_fractal_mandelbrot, &k, NULL);
     printk("starting threading\n");
 
-    /*threading_init();
-    join_all();
+    //threading_init();
+    //join_all();
     printk("Input:");
     printk("\nleft:q\tright:d\tup:z\tdown:s\tzoomIN:o\tzoomOut:p\tquit:l\n");
-
+    draw_fractal_mandelbrot(&k, NULL);
     do{
         input = uart_getc();
         switch(input){
@@ -205,8 +211,8 @@ void notmain(){
             default:
                 printk("Wrong key:\nleft:q\tright:d\tup:z\tdown:s\tzoomIN:o\tzoomOut:p\tquit:l\n");
         }
-
-        time1 = READ_TIMER();
+        draw_fractal_mandelbrot(&k, NULL);
+        /*time1 = READ_TIMER();
         ith_line = 0;
         // since reusing for the same task, we can not exit and not fork threads?
         for(int i = 0; i < 4; i++){
@@ -219,10 +225,10 @@ void notmain(){
         join_all();
 
         time2 = READ_TIMER();
-        printk("Time consumed for drawing the fractal: %f",(double)(time1 - time2)/freq);
+        printk("Time consumed for drawing the fractal: %f",(double)(time1 - time2)/freq);*/
     } while(input != 'l');
 
-    printk("\nAnother chapter closes\n");*/
+    printk("\nAnother chapter closes\n");
 
     while(1){}
 }

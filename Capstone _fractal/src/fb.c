@@ -9,7 +9,7 @@ uint32_t *lfb;                          /* raw frame buffer address */
 /**
  * Set screen resolution to 1024x768
  */
-void fb_init()
+uint32_t*fb_init()
 {
     mbox[0] = 35*4;
     mbox[1] = MBOX_REQUEST;
@@ -17,14 +17,14 @@ void fb_init()
     mbox[2] = 0x48003;  //set phy wh
     mbox[3] = 8;
     mbox[4] = 0;
-    mbox[5] = 1024;     //FrameBufferInfo.width
-    mbox[6] = 768;      //FrameBufferInfo.height
+    mbox[5] = 640;     //FrameBufferInfo.width
+    mbox[6] = 480;      //FrameBufferInfo.height
 
     mbox[7] = 0x48004;  //set virt wh
     mbox[8] = 8;
     mbox[9] = 0;
-    mbox[10] = 1024;    //FrameBufferInfo.virtual_width
-    mbox[11] = 768;     //FrameBufferInfo.virtual_height
+    mbox[10] = 640;    //FrameBufferInfo.virtual_width
+    mbox[11] = 480;     //FrameBufferInfo.virtual_height
 
     mbox[12] = 0x48009; //set virt offset
     mbox[13] = 8;
@@ -64,11 +64,10 @@ void fb_init()
         pitch = mbox[33];         //get number of bytes per line
         isrgb = mbox[24];         //get the actual channel order
         lfb = (uint32_t*)((uintptr_t)mbox[28]);
+        //printk("w:%d - h:%d - p:%d - rgb:%d - lfb:0x%x", width, height, pitch, isrgb, lfb);
+        return lfb;
     } else {
         printk("Unable to set screen resolution to 1024x768x32\n");
+        return 0;
     }
-}
-
-uint32_t *buffer(void){
-    return lfb;
 }
