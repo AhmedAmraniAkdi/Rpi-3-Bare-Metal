@@ -8,7 +8,7 @@
 #include "VCmailbox.h"
 #include <arm_neon.h>
 #include "fb.h"
-//#include <math.h>
+#include <math.h>
 
 // let's do this
 
@@ -30,30 +30,6 @@ static uint32_t *bf = NULL;
 #define line_per_thread 24 // 32 threads total (not counting mains) and 768 heights -> 24 lines per thread;
 #define total_threads 32
 #define iterations 32
-
-/*// RGBA
-static uint32_t color_palette[] = {
-     0x99B89800, 0xFECEAB00, 0xFF847C00, 0xE84A5F00, 0x2A363B00 
-};
-#define len_palette 5
-
-// https://stackoverflow.com/questions/15048098/write-log-function-without-math-library
-static inline float fastlog2 (float x)
-{
-    union { float f; uint32_t i; } vx = { x };
-    union { uint32_t i; float f; } mx = { (vx.i & 0x007FFFFF) | 0x3f000000 };
-    float y = vx.i;
-    y *= 1.1920928955078125e-7f;
-
-    return y - 124.22551499f
-             - 1.498030302f * mx.f 
-             - 1.72587999f / (0.3520887068f + mx.f);
-}
-
-static inline float fastlog (float x)
-{
-    return 0.69314718f * fastlog2 (x);
-}*/
 
 
 // big inspiration from
@@ -136,11 +112,9 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             colour:
             vst1q_u32(n_result, _n);
             for(int i = 0; i < 4; i++){
-                if(n_result[i] < iterations){
-                    *buffer_temp = 0;
-                } else{
-                    *buffer_temp = 0x00ffffff;
-                }
+                *buffer_temp = (int) (127.5 * sin(0.1 * n_result[i]) + 127.5)
+                             | ((int) (127.5 * sin(0.1 * n_result[i] + 2.094) + 127.5)) << 8
+                             | ((int) (127.5 * sin(0.1 * n_result[i] + 4.188) + 127.5)) << 16;
                 buffer_temp++;
             }
         }

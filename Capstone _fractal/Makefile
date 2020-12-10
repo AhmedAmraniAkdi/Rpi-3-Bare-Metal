@@ -3,7 +3,7 @@ CC= aarch64-none-elf-gcc
 LIBPI = src
 LIBPI_HEADERS = include
 CFLAGS = -I$(LIBPI_HEADERS) -I. -Wall  -Wno-unused-function -O2 -nostartfiles -ffreestanding -nostdlib
-#MATHLIB = -L/usr/local/bin/aarch64-none-elf/aarch64-elf/libc/usr/lib -lm
+MATHLIB = -L/usr/local/bin/aarch64-none-elf/aarch64-elf/libc/usr/lib -lm
 SRC = fractal_multicore_threading_intrinsics.c
 #SRC = test_multicore_scheduling_interrupts.c
 OBJS = $(SRC:.c=.o)
@@ -18,7 +18,7 @@ start.o : start.s
 	#$(CC) -c $< -o $@ #for start.S
 
 kernel8.img : mmap start.o $(OBJS) $(LIBPI)/libpi.a
-	aarch64-none-elf-ld start.o $(OBJS) $(LIBPI)/libpi.a -T mmap -o test.elf
+	aarch64-none-elf-ld start.o $(OBJS) $(LIBPI)/libpi.a $(MATHLIB) -T mmap -o test.elf
 	aarch64-none-elf-objdump -D test.elf > test.list
 	aarch64-none-elf-objcopy test.elf -O binary kernel8.img
 
