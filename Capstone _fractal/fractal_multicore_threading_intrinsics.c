@@ -30,12 +30,12 @@ static uint32_t *bf = NULL;
 #define line_per_thread 24 // 32 threads total (not counting mains) and 768 heights -> 24 lines per thread;
 #define total_threads 32
 #define iterations 32
-
+static int ith_line[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}; // XD no malloc
 
 // big inspiration from
 // https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/Videos/OneLoneCoder_VIDEO_IntrinsicFunctions.cpp
 void draw_fractal_mandelbrot(void *arg, void *ret){
-    //float *ith_line = (float*)arg;
+    int *ith_line = (int*)arg;
     uint32_t *buffer_temp = bf;
 
     float32x4_t _a, _b, _zr, _zi, _zr2, _zi2, _cr, _ci;
@@ -54,13 +54,13 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
 
     uint32_t n_result[4] = {0, 0, 0, 0};
 
-
-    //for(int y = *ith_line; y < line_per_thread; y += total_threads, buffer_temp += (total_threads * width)){
-    for(int y = 0.0/**ith_line*/; y < height; y++){
+    buffer_temp += (*ith_line) * width; 
+    for(int y = *ith_line; y < line_per_thread; y += total_threads){
+    //for(int y = 0/**ith_line*/; y < height; y++){
         _a  = vdupq_n_f32((float)y);
         _ci = vmlaq_f32(_ymin, _yscale, _a);
 
-        for(int x = 0.0; x < width; x += 4/*, buffer_temp += 4*/){ // x, y are pixel space
+        for(int x = 0; x < width; x += 4){ // x, y are pixel space
             
             _a  = vdupq_n_f32((float)x);
             _a  = vaddq_f32(_a, _x_offset123);
@@ -112,12 +112,13 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             colour:
             vst1q_u32(n_result, _n);
             for(int i = 0; i < 4; i++){
-                *buffer_temp = (int) (127.5 * sin(0.1 * n_result[i]) + 127.5)
-                             | ((int) (127.5 * sin(0.1 * n_result[i] + 2.094) + 127.5)) << 8
-                             | ((int) (127.5 * sin(0.1 * n_result[i] + 4.188) + 127.5)) << 16;
+                *buffer_temp = (unsigned) (127.5 * sin(0.1 * n_result[i]) + 127.5)
+                             | ((unsigned) (127.5 * sin(0.1 * n_result[i] + 2.094) + 127.5)) << 8
+                             | ((unsigned) (127.5 * sin(0.1 * n_result[i] + 4.188) + 127.5)) << 16;
                 buffer_temp++;
             }
         }
+        buffer_temp += ((total_threads - 1) * width);
     }
 
 }
@@ -131,10 +132,10 @@ void notmain(){
     bf = fb_init();
 
 
-    //egister_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
-    //register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
-    //register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
-    //register_irq_handler(bTIMER_CORE3, CORE3, &scheduler_tick, &core_timer_clearer);
+    register_irq_handler(bTIMER_CORE0, CORE0, &scheduler_tick, &core_timer_clearer);
+    register_irq_handler(bTIMER_CORE1, CORE1, &scheduler_tick, &core_timer_clearer);
+    register_irq_handler(bTIMER_CORE2, CORE2, &scheduler_tick, &core_timer_clearer);
+    register_irq_handler(bTIMER_CORE3, CORE3, &scheduler_tick, &core_timer_clearer);
 
     printk("configuration complete\n");
 
@@ -143,27 +144,22 @@ void notmain(){
     uint64_t time2 = 0;
     uint64_t freq = READ_TIMER_FREQ();
     
-    /*int ith_line = 0;
+    int k = 0;
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 8; j++){
-            int k = ith_line;
-            fork_task(CORE0 + i, &draw_fractal_mandelbrot, &k, NULL);
-            ith_line++;
+            fork_task(CORE0 + i, &draw_fractal_mandelbrot, &ith_line[k], NULL);
+            k++;
         }
-    }*/
-    /*int k = 0;
-    fork_task(CORE0, &draw_fractal_mandelbrot, &k, NULL);
-    int j = 1;
-    fork_task(CORE1, &draw_fractal_mandelbrot, &j, NULL);*/
-    int k = 0;
-    //fork_task(CORE0, &draw_fractal_mandelbrot, &k, NULL);
+    }
+
     printk("starting threading\n");
 
-    //threading_init();
-    //join_all();
+    threading_init();
+    join_all();
+
     printk("Input:");
     printk("\nleft:q\tright:d\tup:z\tdown:s\tzoomIN:o\tzoomOut:p\tquit:l\n");
-    draw_fractal_mandelbrot(&k, NULL);
+    //draw_fractal_mandelbrot(&k, NULL);
     do{
         input = uart_getc();
         switch(input){
@@ -190,21 +186,21 @@ void notmain(){
             default:
                 printk("Wrong key:\nleft:q\tright:d\tup:z\tdown:s\tzoomIN:o\tzoomOut:p\tquit:l\n");
         }
-        draw_fractal_mandelbrot(&k, NULL);
-        /*time1 = READ_TIMER();
-        ith_line = 0;
-        // since reusing for the same task, we can not exit and not fork threads?
+        //draw_fractal_mandelbrot(&k, NULL);
+        time1 = READ_TIMER();
+        int ith_line = 0;
         for(int i = 0; i < 4; i++){
             for(int j = 0; j < 8; j++){
-                fork_task(CORE0 + i, &draw_fractal_mandelbrot, &ith_line, NULL);
+                int k = ith_line;
+                fork_task(CORE0 + i, &draw_fractal_mandelbrot, &k, NULL);
                 ith_line++;
             }
-        }
+         }
         threading_init();
         join_all();
 
         time2 = READ_TIMER();
-        printk("Time consumed for drawing the fractal: %f",(double)(time1 - time2)/freq);*/
+        printk("Time consumed for drawing the fractal: %f", (double)(time1 - time2)/freq);
     } while(input != 'l');
 
     printk("\nAnother chapter closes\n");
