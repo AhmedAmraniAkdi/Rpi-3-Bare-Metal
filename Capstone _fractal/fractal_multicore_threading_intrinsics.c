@@ -12,27 +12,26 @@
 
 // let's do this
 
-#define width 640
-#define height 480
+#define width 1024
+#define height 768
 #define depth 4
 
-#define Xstart -10.0
-#define Ystart -10.0
-#define Xend 10.0
-#define Yend 10.0
+#define Xstart -2.5
+#define Ystart -1.5
+#define Xend 1.5
+#define Yend 1.5
 
-static int Xpan = 0;
-static int Ypan = 0;
+static float Xpan = 0;
+static float Ypan = 0;
 static float scale = 1.0;
 
 static uint32_t *bf = NULL;
 
 #define line_per_thread 24 // 32 threads total (not counting mains) and 768 heights -> 24 lines per thread;
 #define total_threads 32
-#define iterations 512
-#define LOGITER 2.709
+#define iterations 32
 
-// RGBA
+/*// RGBA
 static uint32_t color_palette[] = {
      0x99B89800, 0xFECEAB00, 0xFF847C00, 0xE84A5F00, 0x2A363B00 
 };
@@ -54,13 +53,13 @@ static inline float fastlog2 (float x)
 static inline float fastlog (float x)
 {
     return 0.69314718f * fastlog2 (x);
-}
+}*/
 
 
 // big inspiration from
 // https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/Videos/OneLoneCoder_VIDEO_IntrinsicFunctions.cpp
 void draw_fractal_mandelbrot(void *arg, void *ret){
-    float *ith_line = (float*)arg;
+    //float *ith_line = (float*)arg;
     uint32_t *buffer_temp = bf;
 
     float32x4_t _a, _b, _zr, _zi, _zr2, _zi2, _cr, _ci;
@@ -70,25 +69,24 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
 
     uint32x4_t _n, _mask0, _mask1;
     uint32x4_t _iterations =  vdupq_n_u32(iterations);
-    uint32x4_t _one = {1, 1, 1, 1};
+    uint32x4_t _one = vdupq_n_u32(1);
 
-    float32x4_t _xmin = vdupq_n_f32(Xstart);
-    float32x4_t _ymin = vdupq_n_f32(Ystart);
-    float32x4_t _xscale = vdupq_n_f32((float)(Xend - Xstart)/width);
-    float32x4_t _yscale = vdupq_n_f32((float)(Yend - Ystart)/height);
+    float32x4_t _xmin = vdupq_n_f32(Xstart + Xpan);
+    float32x4_t _ymin = vdupq_n_f32(Ystart + Ypan);
+    float32x4_t _xscale = vdupq_n_f32((Xend - Xstart)/width * scale);
+    float32x4_t _yscale = vdupq_n_f32((Yend - Ystart)/height * scale);
 
-    float coloring_indx = 0;
-    float temp = 0;
+    uint32_t n_result[4] = {0, 0, 0, 0};
 
 
     //for(int y = *ith_line; y < line_per_thread; y += total_threads, buffer_temp += (total_threads * width)){
-    for(float y = *ith_line; y < height; y++){
-        _a  = vdupq_n_f32(y);
+    for(int y = 0.0/**ith_line*/; y < height; y++){
+        _a  = vdupq_n_f32((float)y);
         _ci = vmlaq_f32(_ymin, _yscale, _a);
 
-        for(float x = 0; x < width; x += 4/*, buffer_temp += 4*/){ // x, y are pixel space
+        for(int x = 0.0; x < width; x += 4/*, buffer_temp += 4*/){ // x, y are pixel space
             
-            _a  = vdupq_n_f32(x);
+            _a  = vdupq_n_f32((float)x);
             _a  = vaddq_f32(_a, _x_offset123);
             _cr = vmlaq_f32(_xmin, _xscale, _a);
 
@@ -100,7 +98,7 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             r:
             // z = a + ib = z * z + c
             // a = zr * zr - zi * zi + cr = zr2 - zi2 + cr
-            // b = zi * zi * 2.0 + ci
+            // b = zr * zi * 2.0 + ci
 
             _zr2 = vmulq_f32(_zr, _zr);
             _zi2 = vmulq_f32(_zi, _zi);
@@ -108,7 +106,7 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             _a   = vsubq_f32(_zr2, _zi2);
             _a   = vaddq_f32(_a, _cr);
 
-            _b   = vmulq_f32(_zi, _zi);
+            _b   = vmulq_f32(_zr, _zi);
             _b   = vmlaq_f32(_ci, _b, _two);
 
             _zr  = _a;
@@ -136,8 +134,15 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             }
 
             colour:
-
-            // something
+            vst1q_u32(n_result, _n);
+            for(int i = 0; i < 4; i++){
+                if(n_result[i] < iterations){
+                    *buffer_temp = 0;
+                } else{
+                    *buffer_temp = 0x00ffffff;
+                }
+                buffer_temp++;
+            }
         }
     }
 
@@ -189,22 +194,22 @@ void notmain(){
         input = uart_getc();
         switch(input){
             case 'q':
-                Xpan-=10;
+                Xpan -= 0.05;
                 break;
             case 'd':
-                Xpan+=10;
+                Xpan += 0.05;
                 break;
             case 'z':
-                Ypan++;
+                Ypan += 0.05;
                 break;
             case 's':
-                Ypan--;
+                Ypan -= 0.05;
                 break;
             case 'p':
-                scale *= 1.001;
+                scale *= 1.01;
                 break;
             case 'o':
-                scale *= 0.999;
+                scale *= 0.99;
                 break;
             case 'l':
                 break;
