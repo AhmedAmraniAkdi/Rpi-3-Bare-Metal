@@ -54,9 +54,9 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
 
     uint32_t n_result[4] = {0, 0, 0, 0};
 
-    buffer_temp += (*ith_line) * width; 
-    for(int y = *ith_line; y < line_per_thread; y += total_threads){
-    //for(int y = 0/**ith_line*/; y < height; y++){
+    buffer_temp += (*ith_line) * width;
+    int k = 0;
+    for(int y = *ith_line; k < line_per_thread; y += total_threads){
         _a  = vdupq_n_f32((float)y);
         _ci = vmlaq_f32(_ymin, _yscale, _a);
 
@@ -112,13 +112,19 @@ void draw_fractal_mandelbrot(void *arg, void *ret){
             colour:
             vst1q_u32(n_result, _n);
             for(int i = 0; i < 4; i++){
-                *buffer_temp = (unsigned) (127.5 * sin(0.1 * n_result[i]) + 127.5)
+                /**buffer_temp = (unsigned) (127.5 * sin(0.1 * n_result[i]) + 127.5)
                              | ((unsigned) (127.5 * sin(0.1 * n_result[i] + 2.094) + 127.5)) << 8
-                             | ((unsigned) (127.5 * sin(0.1 * n_result[i] + 4.188) + 127.5)) << 16;
+                             | ((unsigned) (127.5 * sin(0.1 * n_result[i] + 4.188) + 127.5)) << 16;*/
+                if(n_result[i] < iterations){
+                    *buffer_temp = 0x0;
+                } else {
+                    *buffer_temp = 0x00ffffff;
+                }
                 buffer_temp++;
             }
         }
         buffer_temp += ((total_threads - 1) * width);
+        k++;
     }
 
 }
@@ -159,21 +165,20 @@ void notmain(){
 
     printk("Input:");
     printk("\nleft:q\tright:d\tup:z\tdown:s\tzoomIN:o\tzoomOut:p\tquit:l\n");
-    //draw_fractal_mandelbrot(&k, NULL);
     do{
         input = uart_getc();
         switch(input){
             case 'q':
-                Xpan -= 0.05;
+                Xpan -= 1;
                 break;
             case 'd':
-                Xpan += 0.05;
+                Xpan += 1;
                 break;
             case 'z':
-                Ypan += 0.05;
+                Ypan += 1;
                 break;
             case 's':
-                Ypan -= 0.05;
+                Ypan -= 1;
                 break;
             case 'p':
                 scale *= 1.01;
@@ -186,16 +191,14 @@ void notmain(){
             default:
                 printk("Wrong key:\nleft:q\tright:d\tup:z\tdown:s\tzoomIN:o\tzoomOut:p\tquit:l\n");
         }
-        //draw_fractal_mandelbrot(&k, NULL);
         time1 = READ_TIMER();
-        int ith_line = 0;
+        k = 0;
         for(int i = 0; i < 4; i++){
             for(int j = 0; j < 8; j++){
-                int k = ith_line;
-                fork_task(CORE0 + i, &draw_fractal_mandelbrot, &k, NULL);
-                ith_line++;
+                fork_task(CORE0 + i, &draw_fractal_mandelbrot, &ith_line[k], NULL);
+                k++;
             }
-         }
+        }
         threading_init();
         join_all();
 
